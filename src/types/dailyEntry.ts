@@ -21,18 +21,10 @@ export interface DailyEntry {
   paidAt: string | null;
 }
 
-export type DailyAssignmentDraft = Pick<
-  DailyEntry,
-  | 'date'
-  | 'driverId'
-  | 'driverName'
-  | 'vehicleType'
-  | 'vehicleNumber'
-  | 'route'
-  | 'attendance'
->;
-
-export type DailyFuelDraft = Pick<
-  DailyEntry,
-  'dailyRate' | 'fuelLitres' | 'settlementType'
->;
+export interface DailyEntryDraft {
+  date: string;
+  driverId: string;
+  route: string;
+  attendance: AttendanceStatus;
+  fuelLitres: number;
+}

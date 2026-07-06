@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { DailyEntryRow } from '@/components/DailyEntryRow';
 import { DateNavigator } from '@/components/DateNavigator';
 import { EmptyState } from '@/components/EmptyState';
@@ -16,7 +18,6 @@ import {
   computeEffectiveFuelCost,
   fetchDailyEntriesForDate,
   markDailyEntryPaid,
-  saveDailyFuelEntry,
 } from '@/services/dailyEntryService';
 import { fetchFuelPriceForDate } from '@/services/fuelPriceService';
 import { openUpiPayment } from '@/services/upiService';
@@ -26,19 +27,32 @@ import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { formatCurrency } from '@/utils/currencyUtils';
-import type { DailyEntry, SettlementType } from '@/types/dailyEntry';
+import type { TransportStackParamList } from '@/navigation/types';
+import type { DailyEntry } from '@/types/dailyEntry';
 
-interface RowInputState {
-  dailyRate: string;
-  fuelLitres: string;
+type DailyEntryListScreenProps = NativeStackScreenProps<
+  TransportStackParamList,
+  'DailyEntryList'
+>;
+
+function sortByRoute(entries: DailyEntry[]): DailyEntry[] {
+  return [...entries].sort((first, second) => {
+    const routeComparison = first.route.localeCompare(second.route, undefined, {
+      numeric: true,
+    });
+    return routeComparison !== 0
+      ? routeComparison
+      : first.driverName.localeCompare(second.driverName);
+  });
 }
 
-export function DailyEntryListScreen() {
+export function DailyEntryListScreen({
+  navigation,
+}: DailyEntryListScreenProps) {
   const selectedDate = useTransportStore(state => state.selectedDate);
   const setSelectedDate = useTransportStore(state => state.setSelectedDate);
 
   const [entries, setEntries] = useState<DailyEntry[]>([]);
-  const [rowInputs, setRowInputs] = useState<Record<string, RowInputState>>({});
   const [hasFuelPrice, setHasFuelPrice] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -59,19 +73,8 @@ export function DailyEntryListScreen() {
           fetchDailyEntriesForDate(selectedDate),
           fetchFuelPriceForDate(selectedDate),
         ]);
-        setEntries(fetchedEntries);
+        setEntries(sortByRoute(fetchedEntries));
         setHasFuelPrice(fuelPrice !== null);
-        setRowInputs(
-          Object.fromEntries(
-            fetchedEntries.map(entry => [
-              entry.driverId,
-              {
-                dailyRate: String(entry.dailyRate),
-                fuelLitres: String(entry.fuelLitres),
-              },
-            ]),
-          ),
-        );
       } catch (error) {
         setErrorMessage(
           error instanceof Error
@@ -87,82 +90,11 @@ export function DailyEntryListScreen() {
   );
 
   useEffect(() => {
-    void loadData(false);
-  }, [loadData]);
-
-  function handleRowInputChange(
-    driverId: string,
-    field: keyof RowInputState,
-    value: string,
-  ): void {
-    setRowInputs(previous => ({
-      ...previous,
-      [driverId]: { ...previous[driverId], [field]: value } as RowInputState,
-    }));
-  }
-
-  async function commitRow(entry: DailyEntry): Promise<void> {
-    const rowInput = rowInputs[entry.driverId];
-    if (rowInput === undefined) {
-      return;
-    }
-
-    const dailyRate = Number(rowInput.dailyRate);
-    const fuelLitres = Number(rowInput.fuelLitres);
-    if (!Number.isFinite(dailyRate) || !Number.isFinite(fuelLitres)) {
-      setRowErrorMessage('Daily rate and fuel litres must be numbers.');
-      return;
-    }
-
-    setRowErrorMessage(null);
-    try {
-      const updatedEntry = await saveDailyFuelEntry(
-        selectedDate,
-        entry.driverId,
-        {
-          dailyRate,
-          fuelLitres,
-          settlementType: entry.settlementType,
-        },
-      );
-      setEntries(previous =>
-        previous.map(existing =>
-          existing.id === updatedEntry.id ? updatedEntry : existing,
-        ),
-      );
-    } catch (error) {
-      setRowErrorMessage(
-        error instanceof Error ? error.message : 'Failed to save entry.',
-      );
-    }
-  }
-
-  async function handleToggleSameDay(entry: DailyEntry): Promise<void> {
-    const nextSettlementType: SettlementType =
-      entry.settlementType === 'sameDay' ? 'monthly' : 'sameDay';
-    try {
-      const updatedEntry = await saveDailyFuelEntry(
-        selectedDate,
-        entry.driverId,
-        {
-          dailyRate: entry.dailyRate,
-          fuelLitres: entry.fuelLitres,
-          settlementType: nextSettlementType,
-        },
-      );
-      setEntries(previous =>
-        previous.map(existing =>
-          existing.id === updatedEntry.id ? updatedEntry : existing,
-        ),
-      );
-    } catch (error) {
-      setRowErrorMessage(
-        error instanceof Error
-          ? error.message
-          : 'Failed to update settlement type.',
-      );
-    }
-  }
+    const unsubscribe = navigation.addListener('focus', () => {
+      void loadData(false);
+    });
+    return unsubscribe;
+  }, [navigation, loadData]);
 
   async function handleSettleNow(entry: DailyEntry): Promise<void> {
     setSettlingEntryId(entry.id);
@@ -179,8 +111,10 @@ export function DailyEntryListScreen() {
       );
       const paidEntry = await markDailyEntryPaid(entry);
       setEntries(previous =>
-        previous.map(existing =>
-          existing.id === paidEntry.id ? paidEntry : existing,
+        sortByRoute(
+          previous.map(existing =>
+            existing.id === paidEntry.id ? paidEntry : existing,
+          ),
         ),
       );
     } catch (error) {
@@ -217,27 +151,24 @@ export function DailyEntryListScreen() {
           variant="error"
           onRetry={() => void loadData(false)}
         />
-      ) : entries.length === 0 ? (
-        <EmptyState
-          title="No entries yet"
-          message="Create a daily assignment for this date first."
-        />
       ) : !hasFuelPrice ? (
         <EmptyState
           title="Fuel price not set"
-          message="Set today's fuel price before logging fuel entries."
+          message="Set today's fuel price before logging entries for this date."
         />
       ) : (
         <>
-          <View style={styles.summaryBar}>
-            <Text style={styles.summaryText}>Vehicles: {entries.length}</Text>
-            <Text style={styles.summaryText}>
-              Fuel: {formatCurrency(totalFuelCost)}
-            </Text>
-            <Text style={styles.summaryText}>
-              Payout: {formatCurrency(totalDriverPayout)}
-            </Text>
-          </View>
+          {entries.length > 0 ? (
+            <View style={styles.summaryBar}>
+              <Text style={styles.summaryText}>Vehicles: {entries.length}</Text>
+              <Text style={styles.summaryText}>
+                Fuel: {formatCurrency(totalFuelCost)}
+              </Text>
+              <Text style={styles.summaryText}>
+                Payout: {formatCurrency(totalDriverPayout)}
+              </Text>
+            </View>
+          ) : null}
           {rowErrorMessage !== null ? (
             <Text style={styles.rowError}>{rowErrorMessage}</Text>
           ) : null}
@@ -251,24 +182,34 @@ export function DailyEntryListScreen() {
                 onRefresh={() => void loadData(true)}
               />
             }
+            ListEmptyComponent={
+              <EmptyState
+                title="No entries yet"
+                message="Add a driver's entry for this date using the button below."
+              />
+            }
             renderItem={({ item }) => (
               <DailyEntryRow
                 entry={item}
-                dailyRateInput={rowInputs[item.driverId]?.dailyRate ?? '0'}
-                fuelLitresInput={rowInputs[item.driverId]?.fuelLitres ?? '0'}
-                onChangeDailyRate={value =>
-                  handleRowInputChange(item.driverId, 'dailyRate', value)
+                onPress={() =>
+                  navigation.navigate('AddEditDailyEntry', {
+                    date: selectedDate,
+                    driverId: item.driverId,
+                  })
                 }
-                onChangeFuelLitres={value =>
-                  handleRowInputChange(item.driverId, 'fuelLitres', value)
-                }
-                onCommit={() => void commitRow(item)}
-                onToggleSameDay={() => void handleToggleSameDay(item)}
                 onSettleNow={() => void handleSettleNow(item)}
                 isSettling={settlingEntryId === item.id}
               />
             )}
           />
+          <Pressable
+            style={styles.fab}
+            onPress={() =>
+              navigation.navigate('AddEditDailyEntry', { date: selectedDate })
+            }
+          >
+            <Text style={styles.fabLabel}>+</Text>
+          </Pressable>
         </>
       )}
     </SafeAreaView>
@@ -301,5 +242,20 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: spacing.lg,
+  },
+  fab: {
+    position: 'absolute',
+    right: spacing.lg,
+    bottom: spacing.lg,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabLabel: {
+    ...typography.heading,
+    color: colors.surface,
   },
 });

@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -33,6 +34,13 @@ export async function setDocumentById<T extends object>(
   data: T,
 ): Promise<void> {
   await setDoc(doc(firestoreDb, collectionName, id), data as WithFieldValue<T>);
+}
+
+export async function deleteDocumentById(
+  collectionName: string,
+  id: string,
+): Promise<void> {
+  await deleteDoc(doc(firestoreDb, collectionName, id));
 }
 
 export async function queryCollection<T>(

@@ -128,10 +128,6 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
             onPress={() => navigation.navigate('FuelPrice')}
           />
           <NavigationTile
-            label="Daily assignment"
-            onPress={() => navigation.navigate('DailyAssignment')}
-          />
-          <NavigationTile
             label="Daily entries"
             onPress={() => navigation.navigate('DailyEntryList')}
           />
