@@ -66,6 +66,15 @@ yarn-error.log
 # testing
 /coverage
 
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+
 # Yarn
 .yarn/*
 !.yarn/patches
