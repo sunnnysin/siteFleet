@@ -6,7 +6,7 @@ import {
 } from '@/firebase/firestore';
 import { getCurrentUserId } from '@/firebase/auth';
 import { FIRESTORE_COLLECTIONS } from '@/types/collections';
-import { lastNDateKeys } from '@/utils/dateUtils';
+import { formatMonthKey, parseDateKey } from '@/utils/dateUtils';
 import type { FuelPrice, FuelPriceDraft } from '@/types/fuelPrice';
 
 function buildFuelPriceId(ownerId: string, date: string): string {
@@ -31,6 +31,7 @@ export async function setFuelPriceForDate(
     id,
     ownerId,
     date: draft.date,
+    month: formatMonthKey(parseDateKey(draft.date)),
     pricePerLitre: draft.pricePerLitre,
     setAt: new Date().toISOString(),
   };
@@ -38,14 +39,15 @@ export async function setFuelPriceForDate(
   return fuelPrice;
 }
 
-export async function fetchRecentFuelPrices(
-  dayCount: number,
-  fromDate: Date = new Date(),
+export async function fetchFuelPricesForMonth(
+  monthKey: string,
 ): Promise<FuelPrice[]> {
-  const dateKeys = lastNDateKeys(dayCount, fromDate);
   const prices = await queryCollection<FuelPrice>(
     FIRESTORE_COLLECTIONS.fuelPrices,
-    [where('ownerId', '==', getCurrentUserId()), where('date', 'in', dateKeys)],
+    [
+      where('ownerId', '==', getCurrentUserId()),
+      where('month', '==', monthKey),
+    ],
   );
   return [...prices].sort((first, second) =>
     second.date.localeCompare(first.date),

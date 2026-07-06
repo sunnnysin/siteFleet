@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   RefreshControl,
@@ -16,6 +17,7 @@ import { EmptyState } from '@/components/EmptyState';
 import {
   computeEffectiveDriverPay,
   computeEffectiveFuelCost,
+  deleteDailyEntry,
   fetchDailyEntriesForDate,
   markDailyEntryPaid,
 } from '@/services/dailyEntryService';
@@ -59,6 +61,7 @@ export function DailyEntryListScreen({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [rowErrorMessage, setRowErrorMessage] = useState<string | null>(null);
   const [settlingEntryId, setSettlingEntryId] = useState<string | null>(null);
+  const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
 
   const loadData = useCallback(
     async (isPullToRefresh: boolean) => {
@@ -88,6 +91,10 @@ export function DailyEntryListScreen({
     },
     [selectedDate],
   );
+
+  useEffect(() => {
+    void loadData(false);
+  }, [loadData]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -126,6 +133,38 @@ export function DailyEntryListScreen({
     }
   }
 
+  function handleDelete(entry: DailyEntry): void {
+    Alert.alert(
+      'Delete entry',
+      `Remove ${entry.driverName}'s entry for this date? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => void confirmDelete(entry),
+        },
+      ],
+    );
+  }
+
+  async function confirmDelete(entry: DailyEntry): Promise<void> {
+    setDeletingEntryId(entry.id);
+    setRowErrorMessage(null);
+    try {
+      await deleteDailyEntry(entry.id);
+      setEntries(previous =>
+        previous.filter(existing => existing.id !== entry.id),
+      );
+    } catch (error) {
+      setRowErrorMessage(
+        error instanceof Error ? error.message : 'Failed to delete entry.',
+      );
+    } finally {
+      setDeletingEntryId(null);
+    }
+  }
+
   const totalFuelCost = entries.reduce(
     (sum, entry) => sum + computeEffectiveFuelCost(entry),
     0,
@@ -151,13 +190,16 @@ export function DailyEntryListScreen({
           variant="error"
           onRetry={() => void loadData(false)}
         />
-      ) : !hasFuelPrice ? (
-        <EmptyState
-          title="Fuel price not set"
-          message="Set today's fuel price before logging entries for this date."
-        />
       ) : (
         <>
+          {!hasFuelPrice ? (
+            <View style={styles.fuelPriceWarning}>
+              <Text style={styles.fuelPriceWarningText}>
+                No fuel price set for this date — attendance can still be
+                logged, but fuel litres can't be entered until it's set.
+              </Text>
+            </View>
+          ) : null}
           {entries.length > 0 ? (
             <View style={styles.summaryBar}>
               <Text style={styles.summaryText}>Vehicles: {entries.length}</Text>
@@ -199,6 +241,8 @@ export function DailyEntryListScreen({
                 }
                 onSettleNow={() => void handleSettleNow(item)}
                 isSettling={settlingEntryId === item.id}
+                onDelete={() => handleDelete(item)}
+                isDeleting={deletingEntryId === item.id}
               />
             )}
           />
@@ -223,6 +267,19 @@ const styles = StyleSheet.create({
   },
   loadingIndicator: {
     marginTop: spacing.xl,
+  },
+  fuelPriceWarning: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: 8,
+    backgroundColor: `${colors.warning}1A`,
+    borderWidth: 1,
+    borderColor: `${colors.warning}40`,
+  },
+  fuelPriceWarningText: {
+    ...typography.caption,
+    color: colors.warning,
   },
   summaryBar: {
     flexDirection: 'row',

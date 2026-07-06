@@ -1,4 +1,4 @@
-import { endOfMonth, format, parse, startOfMonth, subDays } from 'date-fns';
+import { format, parse } from 'date-fns';
 
 export const DATE_FORMAT = 'yyyy-MM-dd';
 export const MONTH_FORMAT = 'yyyy-MM';
@@ -21,26 +21,6 @@ export function todayKey(): string {
 
 export function currentMonthKey(): string {
   return formatMonthKey(new Date());
-}
-
-export function lastNDateKeys(
-  count: number,
-  fromDate: Date = new Date(),
-): string[] {
-  return Array.from({ length: count }, (_, index) =>
-    formatDateKey(subDays(fromDate, index)),
-  );
-}
-
-export function monthKeyToRange(monthKey: string): {
-  start: string;
-  end: string;
-} {
-  const parsedMonth = parse(monthKey, MONTH_FORMAT, new Date());
-  return {
-    start: formatDateKey(startOfMonth(parsedMonth)),
-    end: formatDateKey(endOfMonth(parsedMonth)),
-  };
 }
 
 export function formatDisplayDate(dateKey: string): string {

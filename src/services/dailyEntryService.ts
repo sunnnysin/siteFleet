@@ -1,5 +1,6 @@
 import { where } from 'firebase/firestore';
 import {
+  deleteDocumentById,
   getDocumentById,
   queryCollection,
   setDocumentById,
@@ -10,7 +11,12 @@ import { fetchFuelPriceForDate } from '@/services/fuelPriceService';
 import { formatMonthKey, parseDateKey } from '@/utils/dateUtils';
 import { roundToTwoDecimals } from '@/utils/currencyUtils';
 import type { DailyEntry, DailyEntryDraft } from '@/types/dailyEntry';
-import type { Driver } from '@/types/driver';
+import type { Driver, DriverType } from '@/types/driver';
+
+export type DailyEntryDriverSource = Pick<
+  Driver,
+  'id' | 'name' | 'vehicleType' | 'vehicleNumber' | 'dailyRate' | 'driverType'
+>;
 
 function buildDailyEntryId(
   ownerId: string,
@@ -26,6 +32,10 @@ export function computeEffectiveDriverPay(entry: DailyEntry): number {
 
 export function computeEffectiveFuelCost(entry: DailyEntry): number {
   return entry.attendance === 'present' ? entry.fuelCost : 0;
+}
+
+export function inferDriverTypeFromEntry(entry: DailyEntry): DriverType {
+  return entry.settlementType === 'sameDay' ? 'replacement' : 'permanent';
 }
 
 export async function fetchDailyEntriesForDate(
@@ -74,7 +84,7 @@ export async function fetchDailyEntry(
 }
 
 export async function saveDailyEntry(
-  driver: Driver,
+  driver: DailyEntryDriverSource,
   draft: DailyEntryDraft,
 ): Promise<DailyEntry> {
   const ownerId = getCurrentUserId();
@@ -114,6 +124,10 @@ export async function saveDailyEntry(
 
   await setDocumentById(FIRESTORE_COLLECTIONS.dailyEntries, id, dailyEntry);
   return dailyEntry;
+}
+
+export async function deleteDailyEntry(entryId: string): Promise<void> {
+  await deleteDocumentById(FIRESTORE_COLLECTIONS.dailyEntries, entryId);
 }
 
 export async function markDailyEntryPaid(
