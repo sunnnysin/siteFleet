@@ -9,11 +9,8 @@ import { FIRESTORE_COLLECTIONS } from '@/types/collections';
 import { fetchFuelPriceForDate } from '@/services/fuelPriceService';
 import { formatMonthKey, parseDateKey } from '@/utils/dateUtils';
 import { roundToTwoDecimals } from '@/utils/currencyUtils';
-import type {
-  DailyAssignmentDraft,
-  DailyEntry,
-  DailyFuelDraft,
-} from '@/types/dailyEntry';
+import type { DailyEntry, DailyEntryDraft } from '@/types/dailyEntry';
+import type { Driver } from '@/types/driver';
 
 function buildDailyEntryId(
   ownerId: string,
@@ -34,13 +31,10 @@ export function computeEffectiveFuelCost(entry: DailyEntry): number {
 export async function fetchDailyEntriesForDate(
   date: string,
 ): Promise<DailyEntry[]> {
-  const entries = await queryCollection<DailyEntry>(
-    FIRESTORE_COLLECTIONS.dailyEntries,
-    [where('ownerId', '==', getCurrentUserId()), where('date', '==', date)],
-  );
-  return [...entries].sort((first, second) =>
-    first.driverName.localeCompare(second.driverName),
-  );
+  return queryCollection<DailyEntry>(FIRESTORE_COLLECTIONS.dailyEntries, [
+    where('ownerId', '==', getCurrentUserId()),
+    where('date', '==', date),
+  ]);
 }
 
 export async function fetchDailyEntriesForMonth(
@@ -50,6 +44,23 @@ export async function fetchDailyEntriesForMonth(
     where('ownerId', '==', getCurrentUserId()),
     where('month', '==', monthKey),
   ]);
+}
+
+export async function fetchDailyEntriesForDriverAndMonth(
+  driverId: string,
+  monthKey: string,
+): Promise<DailyEntry[]> {
+  const entries = await queryCollection<DailyEntry>(
+    FIRESTORE_COLLECTIONS.dailyEntries,
+    [
+      where('ownerId', '==', getCurrentUserId()),
+      where('driverId', '==', driverId),
+      where('month', '==', monthKey),
+    ],
+  );
+  return [...entries].sort((first, second) =>
+    first.date.localeCompare(second.date),
+  );
 }
 
 export async function fetchDailyEntry(
@@ -62,26 +73,9 @@ export async function fetchDailyEntry(
   );
 }
 
-export async function fetchLatestAssignmentForDriver(
-  driverId: string,
-): Promise<DailyEntry | null> {
-  const entries = await queryCollection<DailyEntry>(
-    FIRESTORE_COLLECTIONS.dailyEntries,
-    [
-      where('ownerId', '==', getCurrentUserId()),
-      where('driverId', '==', driverId),
-    ],
-  );
-  return entries.reduce<DailyEntry | null>((latest, entry) => {
-    if (latest === null || entry.date > latest.date) {
-      return entry;
-    }
-    return latest;
-  }, null);
-}
-
-export async function saveDailyAssignment(
-  draft: DailyAssignmentDraft,
+export async function saveDailyEntry(
+  driver: Driver,
+  draft: DailyEntryDraft,
 ): Promise<DailyEntry> {
   const ownerId = getCurrentUserId();
   const id = buildDailyEntryId(ownerId, draft.date, draft.driverId);
@@ -90,55 +84,32 @@ export async function saveDailyAssignment(
     id,
   );
 
+  let fuelCost = 0;
+  if (draft.attendance === 'present' && draft.fuelLitres > 0) {
+    const fuelPrice = await fetchFuelPriceForDate(draft.date);
+    if (fuelPrice === null) {
+      throw new Error(`No fuel price set for ${draft.date}`);
+    }
+    fuelCost = roundToTwoDecimals(draft.fuelLitres * fuelPrice.pricePerLitre);
+  }
+
   const dailyEntry: DailyEntry = {
     id,
     ownerId,
     date: draft.date,
     month: formatMonthKey(parseDateKey(draft.date)),
-    driverId: draft.driverId,
-    driverName: draft.driverName,
-    vehicleType: draft.vehicleType,
-    vehicleNumber: draft.vehicleNumber,
+    driverId: driver.id,
+    driverName: driver.name,
+    vehicleType: driver.vehicleType,
+    vehicleNumber: driver.vehicleNumber,
     route: draft.route,
     attendance: draft.attendance,
-    dailyRate: existingEntry?.dailyRate ?? 0,
-    fuelLitres: existingEntry?.fuelLitres ?? 0,
-    fuelCost: existingEntry?.fuelCost ?? 0,
-    settlementType: existingEntry?.settlementType ?? 'monthly',
+    dailyRate: driver.dailyRate,
+    fuelLitres: draft.fuelLitres,
+    fuelCost,
+    settlementType: driver.driverType === 'replacement' ? 'sameDay' : 'monthly',
     paymentStatus: existingEntry?.paymentStatus ?? 'unpaid',
     paidAt: existingEntry?.paidAt ?? null,
-  };
-
-  await setDocumentById(FIRESTORE_COLLECTIONS.dailyEntries, id, dailyEntry);
-  return dailyEntry;
-}
-
-export async function saveDailyFuelEntry(
-  date: string,
-  driverId: string,
-  draft: DailyFuelDraft,
-): Promise<DailyEntry> {
-  const fuelPrice = await fetchFuelPriceForDate(date);
-  if (fuelPrice === null) {
-    throw new Error(`No fuel price set for ${date}`);
-  }
-
-  const id = buildDailyEntryId(getCurrentUserId(), date, driverId);
-  const existingEntry = await getDocumentById<DailyEntry>(
-    FIRESTORE_COLLECTIONS.dailyEntries,
-    id,
-  );
-
-  if (existingEntry === null) {
-    throw new Error(`No assignment found for driver ${driverId} on ${date}`);
-  }
-
-  const dailyEntry: DailyEntry = {
-    ...existingEntry,
-    dailyRate: draft.dailyRate,
-    fuelLitres: draft.fuelLitres,
-    fuelCost: roundToTwoDecimals(draft.fuelLitres * fuelPrice.pricePerLitre),
-    settlementType: draft.settlementType,
   };
 
   await setDocumentById(FIRESTORE_COLLECTIONS.dailyEntries, id, dailyEntry);

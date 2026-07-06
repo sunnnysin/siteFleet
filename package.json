@@ -9,7 +9,8 @@
     "start": "react-native start",
     "test": "jest",
     "cleanup": "rm -rf node_modules ios/Pods ios/build android/build android/.gradle ios/Podfile.lock package-lock.json yarn.lock",
-    "setup": "yarn install && cd ios && pod install && cd .."
+    "setup": "yarn install && cd ios && pod install && cd ..",
+    "android:apk": "cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -24,10 +25,12 @@
     "react-hook-form": "^7.81.0",
     "react-native": "0.86.0",
     "react-native-dotenv": "^3.4.11",
+    "react-native-html-to-pdf": "^1.3.0",
     "react-native-mmkv": "^4.3.2",
     "react-native-nitro-modules": "^0.36.1",
     "react-native-safe-area-context": "^5.8.0",
     "react-native-screens": "^4.25.2",
+    "react-native-share": "^12.3.1",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
   },

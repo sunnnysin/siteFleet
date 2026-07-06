@@ -13,8 +13,9 @@ service cloud.firestore {
 
     function isOwnerWrite() {
       return isSignedIn() &&
-        request.resource.data.ownerId == request.auth.uid &&
-        (resource == null || resource.data.ownerId == request.auth.uid);
+        (resource == null || resource.data.ownerId == request.auth.uid) &&
+        (request.resource == null ||
+          request.resource.data.ownerId == request.auth.uid);
     }
 
     match /users/{userId} {

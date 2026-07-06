@@ -128,7 +128,7 @@ export function DriverListScreen({ navigation }: DriverListScreenProps) {
             <DriverListItem
               driver={item}
               onPress={() =>
-                navigation.navigate('AddEditDriver', { driverId: item.id })
+                navigation.navigate('DriverDetail', { driverId: item.id })
               }
               onToggleActive={() => void handleToggleActive(item)}
             />

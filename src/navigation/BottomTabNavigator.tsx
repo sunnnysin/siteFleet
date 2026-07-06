@@ -1,9 +1,9 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { TabBarIcon } from '@/components/TabBarIcon';
+import { CustomTabBar } from '@/navigation/CustomTabBar';
 import { TransportStackNavigator } from '@/navigation/TransportStackNavigator';
 import { ConstructionScreen } from '@/screens/ConstructionScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
-import { colors } from '@/theme/colors';
 import transportIcon from '@/assets/transport.png';
 import constructionIcon from '@/assets/construction.png';
 import profileIcon from '@/assets/profile.png';
@@ -14,21 +14,17 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 export function BottomTabNavigator() {
   return (
     <Tab.Navigator
+      tabBar={props => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         headerTitleAlign: 'center',
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-        },
       }}
     >
       <Tab.Screen
         name="Transport"
         component={TransportStackNavigator}
         options={{
+          title: 'Transport',
           tabBarIcon: ({ focused }) => (
             <TabBarIcon source={transportIcon} isFocused={focused} />
           ),

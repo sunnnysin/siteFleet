@@ -1,5 +1,6 @@
 import { where } from 'firebase/firestore';
 import {
+  deleteDocumentById,
   generateDocumentId,
   getDocumentById,
   queryCollection,
@@ -46,4 +47,8 @@ export async function setDriverActiveStatus(
   isActive: boolean,
 ): Promise<Driver> {
   return updateDriver({ ...driver, isActive });
+}
+
+export async function deleteDriver(driverId: string): Promise<void> {
+  await deleteDocumentById(FIRESTORE_COLLECTIONS.drivers, driverId);
 }

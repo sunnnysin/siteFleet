@@ -190,7 +190,7 @@ export function AddEditDriverScreen({
   }
 
   const routeOptions = routes.map(routeItem => ({
-    label: routeItem.name,
+    label: `${routeItem.name} (${routeItem.description})`,
     value: routeItem.id,
   }));
 
