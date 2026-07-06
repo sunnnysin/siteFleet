@@ -46,5 +46,15 @@ service cloud.firestore {
       allow read: if isOwnerRead();
       allow write: if isOwnerWrite();
     }
+
+    match /pumpEntries/{pumpEntryId} {
+      allow read: if isOwnerRead();
+      allow write: if isOwnerWrite();
+    }
+
+    match /vehicleRates/{vehicleRateId} {
+      allow read: if isOwnerRead();
+      allow write: if isOwnerWrite();
+    }
   }
 }

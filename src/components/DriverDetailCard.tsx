@@ -8,6 +8,9 @@ import type { Driver } from '@/types/driver';
 interface DriverDetailCardProps {
   driver: Driver;
   routeLabel: string;
+  monthlyFuelTaken: number;
+  carriedForwardFuel: number;
+  fuelBalance: number;
   onEdit: () => void;
 }
 
@@ -25,9 +28,18 @@ function DetailRow({ label, value }: DetailRowProps) {
   );
 }
 
+function formatFuelAmount(litres: number): string {
+  return litres === 0
+    ? '0 L'
+    : `${Math.abs(litres)} L ${litres > 0 ? '(credit)' : '(owes fuel)'}`;
+}
+
 export function DriverDetailCard({
   driver,
   routeLabel,
+  monthlyFuelTaken,
+  carriedForwardFuel,
+  fuelBalance,
   onEdit,
 }: DriverDetailCardProps) {
   return (
@@ -63,6 +75,15 @@ export function DriverDetailCard({
         label="Rate per day"
         value={formatCurrency(driver.dailyRate)}
       />
+      <DetailRow
+        label="Carried forward"
+        value={formatFuelAmount(carriedForwardFuel)}
+      />
+      <DetailRow
+        label="Fuel taken this month"
+        value={`${monthlyFuelTaken} L`}
+      />
+      <DetailRow label="Fuel balance" value={formatFuelAmount(fuelBalance)} />
 
       <View style={styles.footer}>
         <Pressable style={styles.editButton} onPress={onEdit}>

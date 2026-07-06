@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const VEHICLE_TYPES = ['ACE', 'Van', 'PickUp', 'Auto'] as const;
+export const VEHICLE_TYPES = ['ACE', 'Bolero/PickUp'] as const;
 export type VehicleType = (typeof VEHICLE_TYPES)[number];
 
 export const DRIVER_TYPES = ['permanent', 'replacement'] as const;
@@ -38,7 +38,10 @@ export const driverFormSchema = z
         value => value.length === 0 || /^[\w.-]+@[a-zA-Z]+$/.test(value),
         'Enter a valid UPI ID, e.g. name@bank',
       ),
-    vehicleNumber: z.string().trim().min(1, 'Vehicle number is required'),
+    vehicleNumber: z
+      .string()
+      .trim()
+      .regex(/^\d{4}$/, 'Enter a valid 4-digit vehicle number'),
     vehicleType: z.enum(VEHICLE_TYPES),
     routeId: z.string().min(1, 'Route is required'),
     dailyRate: z

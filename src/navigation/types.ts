@@ -17,7 +17,10 @@ export type TransportStackParamList = {
   RouteList: undefined;
   AddEditRoute: { routeId?: string };
   FuelPrice: undefined;
+  Pump: undefined;
   DailyEntryList: undefined;
   AddEditDailyEntry: { date: string; driverId?: string };
   MonthlyPayment: undefined;
+  Summary: undefined;
+  Bill: undefined;
 };

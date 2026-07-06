@@ -13,6 +13,12 @@ module.exports = {
     '^@/firebase/config$': '<rootDir>/__mocks__/firebaseConfigMock.ts',
     '^@/services/driverReportService$':
       '<rootDir>/__mocks__/driverReportServiceMock.ts',
+    '^@/services/pumpReportService$':
+      '<rootDir>/__mocks__/pumpReportServiceMock.ts',
+    '^@/services/summaryReportService$':
+      '<rootDir>/__mocks__/summaryReportServiceMock.ts',
+    '^@/services/billReportService$':
+      '<rootDir>/__mocks__/billReportServiceMock.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
   },
 };

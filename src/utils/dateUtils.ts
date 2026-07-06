@@ -15,6 +15,10 @@ export function parseDateKey(dateKey: string): Date {
   return parse(dateKey, DATE_FORMAT, new Date());
 }
 
+export function parseMonthKey(monthKey: string): Date {
+  return parse(monthKey, MONTH_FORMAT, new Date());
+}
+
 export function todayKey(): string {
   return formatDateKey(new Date());
 }

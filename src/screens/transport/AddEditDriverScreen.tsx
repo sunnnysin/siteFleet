@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -201,144 +203,159 @@ export function AddEditDriverScreen({
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Controller
-          control={control}
-          name="name"
-          render={({ field }) => (
-            <FormTextInput
-              label="Name"
-              value={field.value}
-              onChangeText={field.onChange}
-              errorMessage={errors.name?.message}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="phone"
-          render={({ field }) => (
-            <FormTextInput
-              label="Phone"
-              value={field.value}
-              onChangeText={field.onChange}
-              keyboardType="phone-pad"
-              errorMessage={errors.phone?.message}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="upiId"
-          render={({ field }) => (
-            <FormTextInput
-              label="UPI ID (optional)"
-              value={field.value}
-              onChangeText={field.onChange}
-              autoCapitalize="none"
-              errorMessage={errors.upiId?.message}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="vehicleNumber"
-          render={({ field }) => (
-            <FormTextInput
-              label="Vehicle number"
-              value={field.value}
-              onChangeText={field.onChange}
-              autoCapitalize="characters"
-              errorMessage={errors.vehicleNumber?.message}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="vehicleType"
-          render={({ field }) => (
-            <SelectField
-              label="Vehicle type"
-              options={VEHICLE_TYPE_OPTIONS}
-              value={field.value}
-              onChange={field.onChange}
-              errorMessage={errors.vehicleType?.message}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="routeId"
-          render={({ field }) => (
-            <SelectField
-              label="Route"
-              options={routeOptions}
-              value={field.value}
-              onChange={field.onChange}
-              placeholder={
-                routeOptions.length === 0
-                  ? 'Add a route first'
-                  : 'Select a route'
-              }
-              errorMessage={errors.routeId?.message}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="dailyRate"
-          render={({ field }) => (
-            <FormTextInput
-              label="Rate per day"
-              value={field.value}
-              onChangeText={field.onChange}
-              keyboardType="decimal-pad"
-              errorMessage={errors.dailyRate?.message}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="driverType"
-          render={({ field }) => (
-            <SelectField
-              label="Driver type"
-              options={DRIVER_TYPE_OPTIONS}
-              value={field.value}
-              onChange={field.onChange}
-              errorMessage={errors.driverType?.message}
-            />
-          )}
-        />
-        {driverType === 'replacement' ? (
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
           <Controller
             control={control}
-            name="replacementForDriverId"
+            name="name"
             render={({ field }) => (
-              <SelectField
-                label="Replacing driver"
-                options={replacementOptions}
+              <FormTextInput
+                label="Name"
                 value={field.value}
-                onChange={field.onChange}
-                placeholder="Select the driver being replaced"
-                errorMessage={errors.replacementForDriverId?.message}
+                onChangeText={field.onChange}
+                errorMessage={errors.name?.message}
               />
             )}
           />
-        ) : null}
-
-        {saveErrorMessage !== null ? (
-          <Text style={styles.saveError}>{saveErrorMessage}</Text>
-        ) : null}
-
-        <View style={styles.saveButton}>
-          <PrimaryButton
-            label="Save"
-            onPress={() => void handleSubmit(onSubmit)()}
-            isLoading={isSaving}
+          <Controller
+            control={control}
+            name="phone"
+            render={({ field }) => (
+              <FormTextInput
+                label="Phone"
+                value={field.value}
+                onChangeText={value =>
+                  field.onChange(value.replace(/[^0-9]/g, ''))
+                }
+                keyboardType="phone-pad"
+                maxLength={10}
+                errorMessage={errors.phone?.message}
+              />
+            )}
           />
-        </View>
-      </ScrollView>
+          <Controller
+            control={control}
+            name="upiId"
+            render={({ field }) => (
+              <FormTextInput
+                label="UPI ID (optional)"
+                value={field.value}
+                onChangeText={field.onChange}
+                autoCapitalize="none"
+                errorMessage={errors.upiId?.message}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="vehicleNumber"
+            render={({ field }) => (
+              <FormTextInput
+                label="Vehicle number"
+                value={field.value}
+                onChangeText={value =>
+                  field.onChange(value.replace(/[^0-9]/g, ''))
+                }
+                keyboardType="number-pad"
+                maxLength={4}
+                errorMessage={errors.vehicleNumber?.message}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="vehicleType"
+            render={({ field }) => (
+              <SelectField
+                label="Vehicle type"
+                options={VEHICLE_TYPE_OPTIONS}
+                value={field.value}
+                onChange={field.onChange}
+                errorMessage={errors.vehicleType?.message}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="routeId"
+            render={({ field }) => (
+              <SelectField
+                label="Route"
+                options={routeOptions}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder={
+                  routeOptions.length === 0
+                    ? 'Add a route first'
+                    : 'Select a route'
+                }
+                errorMessage={errors.routeId?.message}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="dailyRate"
+            render={({ field }) => (
+              <FormTextInput
+                label="Rate per day"
+                value={field.value}
+                onChangeText={field.onChange}
+                keyboardType="decimal-pad"
+                errorMessage={errors.dailyRate?.message}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="driverType"
+            render={({ field }) => (
+              <SelectField
+                label="Driver type"
+                options={DRIVER_TYPE_OPTIONS}
+                value={field.value}
+                onChange={field.onChange}
+                errorMessage={errors.driverType?.message}
+              />
+            )}
+          />
+          {driverType === 'replacement' ? (
+            <Controller
+              control={control}
+              name="replacementForDriverId"
+              render={({ field }) => (
+                <SelectField
+                  label="Replacing driver"
+                  options={replacementOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Select the driver being replaced"
+                  errorMessage={errors.replacementForDriverId?.message}
+                />
+              )}
+            />
+          ) : null}
+
+          {saveErrorMessage !== null ? (
+            <Text style={styles.saveError}>{saveErrorMessage}</Text>
+          ) : null}
+
+          <View style={styles.saveButton}>
+            <PrimaryButton
+              label="Save"
+              onPress={() => void handleSubmit(onSubmit)()}
+              isLoading={isSaving}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

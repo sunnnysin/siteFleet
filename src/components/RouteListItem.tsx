@@ -15,6 +15,7 @@ export function RouteListItem({ route, onPress }: RouteListItemProps) {
       <View>
         <Text style={styles.name}>{route.name}</Text>
         <Text style={styles.description}>{route.description}</Text>
+        <Text style={styles.fuel}>Fuel: {route.fuelLitres ?? 0} L / trip</Text>
       </View>
     </Pressable>
   );
@@ -38,5 +39,10 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  fuel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: spacing.xs / 2,
   },
 });

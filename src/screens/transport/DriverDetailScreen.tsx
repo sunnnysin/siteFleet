@@ -15,17 +15,28 @@ import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { deleteDriver, fetchDriverById } from '@/services/driverService';
-import { fetchDailyEntriesForDriverAndMonth } from '@/services/dailyEntryService';
+import {
+  computeDriverFuelBalance,
+  fetchAllDailyEntriesForDriver,
+  fetchDailyEntriesForDriverAndMonth,
+} from '@/services/dailyEntryService';
 import { fetchRouteById } from '@/services/routeService';
 import { shareDriverMonthlyReport } from '@/services/driverReportService';
+import { computeMonthlyPayments } from '@/services/paymentService';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
-import { currentMonthKey, MONTH_FORMAT } from '@/utils/dateUtils';
-import { format, parse } from 'date-fns';
+import { formatCurrency } from '@/utils/currencyUtils';
+import {
+  currentMonthKey,
+  formatDateKey,
+  MONTH_FORMAT,
+  parseDateKey,
+} from '@/utils/dateUtils';
+import { addMonths, format, parse } from 'date-fns';
 import type { TransportStackParamList } from '@/navigation/types';
 import type { Driver } from '@/types/driver';
-import type { DailyEntry } from '@/types/dailyEntry';
+import type { DailyEntry, PaymentStatus } from '@/types/dailyEntry';
 
 type DriverDetailScreenProps = NativeStackScreenProps<
   TransportStackParamList,
@@ -41,6 +52,10 @@ export function DriverDetailScreen({
   const [routeLabel, setRouteLabel] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey());
   const [entries, setEntries] = useState<DailyEntry[]>([]);
+  const [carriedForwardFuel, setCarriedForwardFuel] = useState(0);
+  const [fuelBalance, setFuelBalance] = useState(0);
+  const [monthlyPaymentStatus, setMonthlyPaymentStatus] =
+    useState<PaymentStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -58,13 +73,33 @@ export function DriverDetailScreen({
         setErrorMessage('Driver not found.');
         return;
       }
-      const [fetchedRoute, fetchedEntries] = await Promise.all([
-        fetchRouteById(fetchedDriver.routeId),
-        fetchDailyEntriesForDriverAndMonth(driverId, selectedMonth),
-      ]);
+      const [fetchedRoute, fetchedEntries, fetchedAllEntries, monthlyPayments] =
+        await Promise.all([
+          fetchRouteById(fetchedDriver.routeId),
+          fetchDailyEntriesForDriverAndMonth(driverId, selectedMonth),
+          fetchAllDailyEntriesForDriver(driverId),
+          computeMonthlyPayments(selectedMonth),
+        ]);
       setDriver(fetchedDriver);
       setRouteLabel(fetchedRoute?.name ?? 'Unknown route');
       setEntries(fetchedEntries);
+      setMonthlyPaymentStatus(
+        monthlyPayments.find(payment => payment.driverId === driverId)
+          ?.paymentStatus ?? null,
+      );
+
+      const monthStartKey = `${selectedMonth}-01`;
+      const nextMonthStartKey = formatDateKey(
+        addMonths(parseDateKey(monthStartKey), 1),
+      );
+      const carriedForwardEntries = fetchedAllEntries.filter(
+        entry => entry.date < monthStartKey,
+      );
+      const entriesThroughMonth = fetchedAllEntries.filter(
+        entry => entry.date < nextMonthStartKey,
+      );
+      setCarriedForwardFuel(computeDriverFuelBalance(carriedForwardEntries));
+      setFuelBalance(computeDriverFuelBalance(entriesThroughMonth));
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to load driver.',
@@ -73,6 +108,10 @@ export function DriverDetailScreen({
       setIsLoading(false);
     }
   }, [driverId, selectedMonth]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -121,7 +160,15 @@ export function DriverDetailScreen({
         parse(selectedMonth, MONTH_FORMAT, new Date()),
         'MMMM yyyy',
       );
-      await shareDriverMonthlyReport(driver, routeLabel, monthLabel, entries);
+      await shareDriverMonthlyReport(
+        driver,
+        routeLabel,
+        monthLabel,
+        entries,
+        carriedForwardFuel,
+        fuelBalance,
+        monthlyPaymentStatus,
+      );
     } catch (error) {
       setExportErrorMessage(
         error instanceof Error ? error.message : 'Failed to export report.',
@@ -155,17 +202,36 @@ export function DriverDetailScreen({
     );
   }
 
+  const totalMonthlyPay = entries.reduce(
+    (sum, entry) =>
+      sum + (entry.attendance === 'present' ? driver.dailyRate : 0),
+    0,
+  );
+  const totalMonthlyFuel = entries.reduce(
+    (sum, entry) => sum + entry.fuelLitres,
+    0,
+  );
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <FlatList
         data={entries}
         keyExtractor={entry => entry.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View>
+            <View style={styles.monthNavigator}>
+              <MonthNavigator
+                selectedMonth={selectedMonth}
+                onChange={setSelectedMonth}
+              />
+            </View>
             <DriverDetailCard
               driver={driver}
               routeLabel={routeLabel}
+              monthlyFuelTaken={totalMonthlyFuel}
+              carriedForwardFuel={carriedForwardFuel}
+              fuelBalance={fuelBalance}
               onEdit={() => navigation.navigate('AddEditDriver', { driverId })}
             />
             <View style={styles.actionsRow}>
@@ -179,11 +245,12 @@ export function DriverDetailScreen({
               </View>
             </View>
 
-            <Text style={styles.sectionTitle}>Monthly history</Text>
-            <MonthNavigator
-              selectedMonth={selectedMonth}
-              onChange={setSelectedMonth}
-            />
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>Monthly history</Text>
+              <Text style={styles.monthlyTotal}>
+                {formatCurrency(totalMonthlyPay)}
+              </Text>
+            </View>
           </View>
         }
         ListEmptyComponent={
@@ -221,22 +288,34 @@ const styles = StyleSheet.create({
   list: {
     padding: spacing.lg,
   },
+  monthNavigator: {
+    marginHorizontal: -spacing.lg,
+  },
   actionsRow: {
     marginTop: spacing.md,
   },
   actionButton: {
     alignSelf: 'stretch',
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
   sectionTitle: {
     ...typography.subheading,
     color: colors.textPrimary,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
+  },
+  monthlyTotal: {
+    ...typography.body,
+    color: colors.textSecondary,
   },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.lg,
+    paddingBottom: 10,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.background,
