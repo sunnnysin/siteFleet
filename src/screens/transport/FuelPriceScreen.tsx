@@ -10,13 +10,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FormTextInput } from '@/components/FormTextInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
+import { MonthNavigator } from '@/components/MonthNavigator';
 import {
   fetchFuelPriceForDate,
-  fetchRecentFuelPrices,
+  fetchFuelPricesForMonth,
   setFuelPriceForDate,
 } from '@/services/fuelPriceService';
 import { formatCurrency } from '@/utils/currencyUtils';
-import { formatDisplayDate, todayKey } from '@/utils/dateUtils';
+import {
+  currentMonthKey,
+  formatDisplayDate,
+  todayKey,
+} from '@/utils/dateUtils';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -24,7 +29,8 @@ import type { FuelPrice } from '@/types/fuelPrice';
 
 export function FuelPriceScreen() {
   const [priceInput, setPriceInput] = useState('');
-  const [recentPrices, setRecentPrices] = useState<FuelPrice[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonthKey());
+  const [monthPrices, setMonthPrices] = useState<FuelPrice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -34,14 +40,14 @@ export function FuelPriceScreen() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const [todaysPrice, recent] = await Promise.all([
+      const [todaysPrice, prices] = await Promise.all([
         fetchFuelPriceForDate(todayKey()),
-        fetchRecentFuelPrices(7),
+        fetchFuelPricesForMonth(selectedMonth),
       ]);
       if (todaysPrice !== null) {
         setPriceInput(String(todaysPrice.pricePerLitre));
       }
-      setRecentPrices(recent);
+      setMonthPrices(prices);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to load fuel prices.',
@@ -49,7 +55,7 @@ export function FuelPriceScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedMonth]);
 
   useEffect(() => {
     void loadData();
@@ -118,15 +124,20 @@ export function FuelPriceScreen() {
         />
       </View>
 
-      <Text style={styles.sectionTitle}>Last 7 days</Text>
-      {recentPrices.length === 0 ? (
+      <Text style={styles.sectionTitle}>Price history</Text>
+      <MonthNavigator
+        selectedMonth={selectedMonth}
+        onChange={setSelectedMonth}
+      />
+
+      {monthPrices.length === 0 ? (
         <EmptyState
           title="No history yet"
-          message="Fuel prices you set will appear here."
+          message="Fuel prices you set this month will appear here."
         />
       ) : (
         <FlatList
-          data={recentPrices}
+          data={monthPrices}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
@@ -165,7 +176,6 @@ const styles = StyleSheet.create({
     ...typography.subheading,
     color: colors.textPrimary,
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
   },
   list: {
     paddingHorizontal: spacing.lg,

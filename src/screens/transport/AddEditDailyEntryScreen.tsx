@@ -19,14 +19,27 @@ import {
   fetchDailyEntriesForDate,
   fetchDailyEntry,
   saveDailyEntry,
+  type DailyEntryDriverSource,
 } from '@/services/dailyEntryService';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { formatDisplayDate } from '@/utils/dateUtils';
 import type { TransportStackParamList } from '@/navigation/types';
-import type { AttendanceStatus } from '@/types/dailyEntry';
+import type { AttendanceStatus, DailyEntry } from '@/types/dailyEntry';
 import type { Driver } from '@/types/driver';
 import type { Route } from '@/types/route';
+
+function buildFallbackDriverSource(entry: DailyEntry): DailyEntryDriverSource {
+  return {
+    id: entry.driverId,
+    name: entry.driverName,
+    vehicleType: entry.vehicleType as Driver['vehicleType'],
+    vehicleNumber: entry.vehicleNumber,
+    dailyRate: entry.dailyRate,
+    driverType:
+      entry.settlementType === 'sameDay' ? 'replacement' : 'permanent',
+  };
+}
 
 type AddEditDailyEntryScreenProps = NativeStackScreenProps<
   TransportStackParamList,
@@ -49,7 +62,8 @@ export function AddEditDailyEntryScreen({
   const [loadErrorMessage, setLoadErrorMessage] = useState<string | null>(null);
   const [availableDrivers, setAvailableDrivers] = useState<Driver[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
-  const [lockedDriver, setLockedDriver] = useState<Driver | null>(null);
+  const [lockedDriver, setLockedDriver] =
+    useState<DailyEntryDriverSource | null>(null);
 
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(
     driverId ?? null,
@@ -71,13 +85,13 @@ export function AddEditDailyEntryScreen({
       setRoutes(fetchedRoutes);
 
       if (isEditMode) {
-        const driver = fetchedDrivers.find(item => item.id === driverId);
         const existingEntry = await fetchDailyEntry(date, driverId);
-        if (driver === undefined || existingEntry === null) {
+        if (existingEntry === null) {
           setLoadErrorMessage('Entry not found.');
           return;
         }
-        setLockedDriver(driver);
+        const driver = fetchedDrivers.find(item => item.id === driverId);
+        setLockedDriver(driver ?? buildFallbackDriverSource(existingEntry));
         setSelectedRouteId(
           fetchedRoutes.find(item => item.name === existingEntry.route)?.id ??
             null,

@@ -1,4 +1,12 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { DriverTypeBadge } from '@/components/DriverTypeBadge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { colors } from '@/theme/colors';
 import { radii, spacing } from '@/theme/spacing';
@@ -7,7 +15,9 @@ import { formatCurrency } from '@/utils/currencyUtils';
 import {
   computeEffectiveDriverPay,
   computeEffectiveFuelCost,
+  inferDriverTypeFromEntry,
 } from '@/services/dailyEntryService';
+import deleteIcon from '@/assets/delete.png';
 import type { DailyEntry } from '@/types/dailyEntry';
 
 interface DailyEntryRowProps {
@@ -15,6 +25,8 @@ interface DailyEntryRowProps {
   onPress: () => void;
   onSettleNow: () => void;
   isSettling: boolean;
+  onDelete: () => void;
+  isDeleting: boolean;
 }
 
 export function DailyEntryRow({
@@ -22,27 +34,50 @@ export function DailyEntryRow({
   onPress,
   onSettleNow,
   isSettling,
+  onDelete,
+  isDeleting,
 }: DailyEntryRowProps) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
       <View style={styles.header}>
         <Text style={styles.route}>{entry.route}</Text>
-        <StatusBadge status={entry.paymentStatus} />
+        <View style={styles.headerBadges}>
+          <DriverTypeBadge driverType={inferDriverTypeFromEntry(entry)} />
+          <StatusBadge status={entry.paymentStatus} />
+        </View>
       </View>
       <Text style={styles.driverName}>{entry.driverName}</Text>
       <Text style={styles.meta}>
         {entry.vehicleType} · {entry.vehicleNumber}
       </Text>
-      <Text
-        style={[
-          styles.attendance,
-          entry.attendance === 'present'
-            ? styles.presentText
-            : styles.absentText,
-        ]}
-      >
-        {entry.attendance === 'present' ? 'Present' : 'Absent'}
-      </Text>
+      <View style={styles.attendanceRow}>
+        <Text
+          style={[
+            styles.attendance,
+            entry.attendance === 'present'
+              ? styles.presentText
+              : styles.absentText,
+          ]}
+        >
+          {entry.attendance === 'present' ? 'Present' : 'Absent'}
+        </Text>
+        <Pressable
+          style={styles.deleteButton}
+          onPress={onDelete}
+          disabled={isDeleting}
+          hitSlop={8}
+        >
+          {isDeleting ? (
+            <ActivityIndicator size="small" color={colors.danger} />
+          ) : (
+            <Image
+              source={deleteIcon}
+              style={styles.deleteIcon}
+              resizeMode="contain"
+            />
+          )}
+        </Pressable>
+      </View>
 
       <View style={styles.figuresRow}>
         <Text style={styles.figure}>
@@ -89,6 +124,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerBadges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
   route: {
     ...typography.subheading,
     color: colors.primary,
@@ -104,9 +144,14 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: spacing.xs / 2,
   },
+  attendanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.xs,
+  },
   attendance: {
     ...typography.label,
-    marginTop: spacing.xs,
   },
   presentText: {
     color: colors.success,
@@ -116,12 +161,26 @@ const styles = StyleSheet.create({
   },
   figuresRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: spacing.sm,
   },
   figure: {
     ...typography.caption,
     color: colors.textSecondary,
+  },
+  deleteButton: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 0,
+    top: -20,
+  },
+  deleteIcon: {
+    width: 30,
+    height: 30,
   },
   footerRow: {
     flexDirection: 'row',
