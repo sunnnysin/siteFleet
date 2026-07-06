@@ -161,6 +161,7 @@ export function AddEditDailyEntryScreen({
       await saveDailyEntry(driver, {
         date,
         driverId: driver.id,
+        routeId: selectedRouteId,
         route: routeName,
         attendance,
         fuelLitres: parsedFuelLitres,
@@ -209,6 +210,8 @@ export function AddEditDailyEntryScreen({
     value: routeItem.id,
   }));
 
+  const selectedRoute = routes.find(item => item.id === selectedRouteId);
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -251,11 +254,16 @@ export function AddEditDailyEntryScreen({
         </View>
 
         <FormTextInput
-          label="Fuel litres"
+          label="Fuel litres (actual fuel taken)"
           value={fuelLitres}
           onChangeText={setFuelLitres}
           keyboardType="decimal-pad"
         />
+        {selectedRoute !== undefined ? (
+          <Text style={styles.routeFuelHint}>
+            Route allotment: {selectedRoute.fuelLitres} L
+          </Text>
+        ) : null}
 
         {saveErrorMessage !== null ? (
           <Text style={styles.saveError}>{saveErrorMessage}</Text>
@@ -305,6 +313,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   attendanceTabs: {
+    marginBottom: spacing.md,
+  },
+  routeFuelHint: {
+    color: colors.textSecondary,
+    marginTop: -spacing.sm,
     marginBottom: spacing.md,
   },
   saveError: {

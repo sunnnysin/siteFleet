@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -11,6 +12,7 @@ import { FormTextInput } from '@/components/FormTextInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
+import { DateNavigator } from '@/components/DateNavigator';
 import {
   fetchFuelPriceForDate,
   fetchFuelPricesForMonth,
@@ -28,6 +30,7 @@ import { typography } from '@/theme/typography';
 import type { FuelPrice } from '@/types/fuelPrice';
 
 export function FuelPriceScreen() {
+  const [selectedDate, setSelectedDate] = useState(todayKey());
   const [priceInput, setPriceInput] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey());
   const [monthPrices, setMonthPrices] = useState<FuelPrice[]>([]);
@@ -40,13 +43,13 @@ export function FuelPriceScreen() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const [todaysPrice, prices] = await Promise.all([
-        fetchFuelPriceForDate(todayKey()),
+      const [priceForDate, prices] = await Promise.all([
+        fetchFuelPriceForDate(selectedDate),
         fetchFuelPricesForMonth(selectedMonth),
       ]);
-      if (todaysPrice !== null) {
-        setPriceInput(String(todaysPrice.pricePerLitre));
-      }
+      setPriceInput(
+        priceForDate !== null ? String(priceForDate.pricePerLitre) : '',
+      );
       setMonthPrices(prices);
     } catch (error) {
       setErrorMessage(
@@ -55,7 +58,7 @@ export function FuelPriceScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedMonth]);
+  }, [selectedDate, selectedMonth]);
 
   useEffect(() => {
     void loadData();
@@ -71,7 +74,7 @@ export function FuelPriceScreen() {
     setIsSaving(true);
     setSaveErrorMessage(null);
     try {
-      await setFuelPriceForDate({ date: todayKey(), pricePerLitre });
+      await setFuelPriceForDate({ date: selectedDate, pricePerLitre });
       await loadData();
     } catch (error) {
       setSaveErrorMessage(
@@ -109,7 +112,12 @@ export function FuelPriceScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.form}>
-        <Text style={styles.date}>{formatDisplayDate(todayKey())}</Text>
+        <View style={styles.dateNavigator}>
+          <DateNavigator
+            selectedDate={selectedDate}
+            onChange={setSelectedDate}
+          />
+        </View>
         <FormTextInput
           label="Price per litre"
           value={priceInput}
@@ -141,14 +149,17 @@ export function FuelPriceScreen() {
           keyExtractor={item => item.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <View style={styles.historyRow}>
+            <Pressable
+              style={styles.historyRow}
+              onPress={() => setSelectedDate(item.date)}
+            >
               <Text style={styles.historyDate}>
                 {formatDisplayDate(item.date)}
               </Text>
               <Text style={styles.historyPrice}>
                 {formatCurrency(item.pricePerLitre)}
               </Text>
-            </View>
+            </Pressable>
           )}
         />
       )}
@@ -167,10 +178,10 @@ const styles = StyleSheet.create({
   form: {
     padding: spacing.lg,
   },
-  date: {
-    ...typography.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
+  dateNavigator: {
+    marginHorizontal: -spacing.lg,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.sm,
   },
   sectionTitle: {
     ...typography.subheading,

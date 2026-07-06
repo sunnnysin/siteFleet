@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { colors } from '@/theme/colors';
@@ -9,6 +9,7 @@ import type { MonthlyPayment } from '@/types/payment';
 
 interface MonthlyPaymentRowProps {
   payment: MonthlyPayment;
+  onPress: () => void;
   onPay: () => void;
   onMarkPaid: () => void;
   isProcessing: boolean;
@@ -16,12 +17,13 @@ interface MonthlyPaymentRowProps {
 
 export function MonthlyPaymentRow({
   payment,
+  onPress,
   onPay,
   onMarkPaid,
   isProcessing,
 }: MonthlyPaymentRowProps) {
   return (
-    <View style={styles.row}>
+    <Pressable style={styles.row} onPress={onPress}>
       <View style={styles.header}>
         <Text style={styles.driverName}>{payment.driverName}</Text>
         <StatusBadge status={payment.paymentStatus} />
@@ -51,7 +53,7 @@ export function MonthlyPaymentRow({
           </View>
         </View>
       ) : null}
-    </View>
+    </Pressable>
   );
 }
 

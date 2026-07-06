@@ -15,6 +15,7 @@ export interface DailyEntry {
   attendance: AttendanceStatus;
   dailyRate: number;
   fuelLitres: number;
+  routeFuelLitres: number;
   fuelCost: number;
   settlementType: SettlementType;
   paymentStatus: PaymentStatus;
@@ -24,6 +25,7 @@ export interface DailyEntry {
 export interface DailyEntryDraft {
   date: string;
   driverId: string;
+  routeId: string;
   route: string;
   attendance: AttendanceStatus;
   fuelLitres: number;

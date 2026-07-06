@@ -21,6 +21,7 @@ import {
 import {
   routeFormSchema,
   type Route,
+  type RouteDraft,
   type RouteFormValues,
 } from '@/types/route';
 import { colors } from '@/theme/colors';
@@ -31,6 +32,14 @@ type AddEditRouteScreenProps = NativeStackScreenProps<
   TransportStackParamList,
   'AddEditRoute'
 >;
+
+function toRouteDraft(values: RouteFormValues): RouteDraft {
+  return {
+    name: values.name,
+    description: values.description,
+    fuelLitres: Number(values.fuelLitres),
+  };
+}
 
 export function AddEditRouteScreen({
   route,
@@ -51,7 +60,7 @@ export function AddEditRouteScreen({
     formState: { errors },
   } = useForm<RouteFormValues>({
     resolver: zodResolver(routeFormSchema),
-    defaultValues: { name: '', description: '' },
+    defaultValues: { name: '', description: '', fuelLitres: '' },
   });
 
   useEffect(() => {
@@ -73,6 +82,7 @@ export function AddEditRouteScreen({
         reset({
           name: fetchedRoute.name,
           description: fetchedRoute.description,
+          fuelLitres: String(fetchedRoute.fuelLitres ?? 0),
         });
         setExistingRoute(fetchedRoute);
       })
@@ -99,10 +109,11 @@ export function AddEditRouteScreen({
     setIsSaving(true);
     setSaveErrorMessage(null);
     try {
+      const draft = toRouteDraft(values);
       if (routeId === undefined) {
-        await createRoute(values);
+        await createRoute(draft);
       } else if (existingRoute !== null) {
-        await updateRoute({ ...existingRoute, ...values });
+        await updateRoute({ ...existingRoute, ...draft });
       }
       navigation.goBack();
     } catch (error) {
@@ -161,6 +172,19 @@ export function AddEditRouteScreen({
               value={field.value}
               onChangeText={field.onChange}
               errorMessage={errors.description?.message}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="fuelLitres"
+          render={({ field }) => (
+            <FormTextInput
+              label="Fuel per trip (litres)"
+              value={field.value}
+              onChangeText={field.onChange}
+              keyboardType="decimal-pad"
+              errorMessage={errors.fuelLitres?.message}
             />
           )}
         />

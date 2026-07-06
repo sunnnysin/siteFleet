@@ -6,9 +6,12 @@ import { AddEditDriverScreen } from '@/screens/transport/AddEditDriverScreen';
 import { RouteListScreen } from '@/screens/transport/RouteListScreen';
 import { AddEditRouteScreen } from '@/screens/transport/AddEditRouteScreen';
 import { FuelPriceScreen } from '@/screens/transport/FuelPriceScreen';
+import { PumpScreen } from '@/screens/transport/PumpScreen';
 import { DailyEntryListScreen } from '@/screens/transport/DailyEntryListScreen';
 import { AddEditDailyEntryScreen } from '@/screens/transport/AddEditDailyEntryScreen';
 import { MonthlyPaymentScreen } from '@/screens/transport/MonthlyPaymentScreen';
+import { SummaryScreen } from '@/screens/transport/SummaryScreen';
+import { BillScreen } from '@/screens/transport/BillScreen';
 import type { TransportStackParamList } from '@/navigation/types';
 
 const Stack = createNativeStackNavigator<TransportStackParamList>();
@@ -52,6 +55,11 @@ export function TransportStackNavigator() {
         options={{ title: "Today's Fuel Price" }}
       />
       <Stack.Screen
+        name="Pump"
+        component={PumpScreen}
+        options={{ title: 'Diesel Pump' }}
+      />
+      <Stack.Screen
         name="DailyEntryList"
         component={DailyEntryListScreen}
         options={{ title: 'Daily Entries' }}
@@ -65,6 +73,16 @@ export function TransportStackNavigator() {
         name="MonthlyPayment"
         component={MonthlyPaymentScreen}
         options={{ title: 'Monthly Payments' }}
+      />
+      <Stack.Screen
+        name="Summary"
+        component={SummaryScreen}
+        options={{ title: 'Vehicle Summary' }}
+      />
+      <Stack.Screen
+        name="Bill"
+        component={BillScreen}
+        options={{ title: 'Bill' }}
       />
     </Stack.Navigator>
   );

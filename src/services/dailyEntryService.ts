@@ -8,6 +8,7 @@ import {
 import { getCurrentUserId } from '@/firebase/auth';
 import { FIRESTORE_COLLECTIONS } from '@/types/collections';
 import { fetchFuelPriceForDate } from '@/services/fuelPriceService';
+import { fetchRouteById } from '@/services/routeService';
 import { formatMonthKey, parseDateKey } from '@/utils/dateUtils';
 import { roundToTwoDecimals } from '@/utils/currencyUtils';
 import type { DailyEntry, DailyEntryDraft } from '@/types/dailyEntry';
@@ -32,6 +33,20 @@ export function computeEffectiveDriverPay(entry: DailyEntry): number {
 
 export function computeEffectiveFuelCost(entry: DailyEntry): number {
   return entry.attendance === 'present' ? entry.fuelCost : 0;
+}
+
+export function computeEffectiveFuelConsumption(entry: DailyEntry): number {
+  return entry.attendance === 'present' ? entry.routeFuelLitres ?? 0 : 0;
+}
+
+export function computeFuelBalanceDelta(entry: DailyEntry): number {
+  return entry.fuelLitres - computeEffectiveFuelConsumption(entry);
+}
+
+export function computeDriverFuelBalance(entries: DailyEntry[]): number {
+  return roundToTwoDecimals(
+    entries.reduce((sum, entry) => sum + computeFuelBalanceDelta(entry), 0),
+  );
 }
 
 export function inferDriverTypeFromEntry(entry: DailyEntry): DriverType {
@@ -73,6 +88,21 @@ export async function fetchDailyEntriesForDriverAndMonth(
   );
 }
 
+export async function fetchAllDailyEntriesForDriver(
+  driverId: string,
+): Promise<DailyEntry[]> {
+  const entries = await queryCollection<DailyEntry>(
+    FIRESTORE_COLLECTIONS.dailyEntries,
+    [
+      where('ownerId', '==', getCurrentUserId()),
+      where('driverId', '==', driverId),
+    ],
+  );
+  return [...entries].sort((first, second) =>
+    first.date.localeCompare(second.date),
+  );
+}
+
 export async function fetchDailyEntry(
   date: string,
   driverId: string,
@@ -103,6 +133,8 @@ export async function saveDailyEntry(
     fuelCost = roundToTwoDecimals(draft.fuelLitres * fuelPrice.pricePerLitre);
   }
 
+  const route = await fetchRouteById(draft.routeId);
+
   const dailyEntry: DailyEntry = {
     id,
     ownerId,
@@ -116,6 +148,7 @@ export async function saveDailyEntry(
     attendance: draft.attendance,
     dailyRate: driver.dailyRate,
     fuelLitres: draft.fuelLitres,
+    routeFuelLitres: route?.fuelLitres ?? 0,
     fuelCost,
     settlementType: driver.driverType === 'replacement' ? 'sameDay' : 'monthly',
     paymentStatus: existingEntry?.paymentStatus ?? 'unpaid',

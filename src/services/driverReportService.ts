@@ -1,34 +1,59 @@
 import { generatePDF } from 'react-native-html-to-pdf';
 import Share from 'react-native-share';
-import {
-  computeEffectiveDriverPay,
-  computeEffectiveFuelCost,
-} from '@/services/dailyEntryService';
 import { formatCurrency } from '@/utils/currencyUtils';
 import { formatDisplayDate } from '@/utils/dateUtils';
 import type { Driver } from '@/types/driver';
-import type { DailyEntry } from '@/types/dailyEntry';
+import type { DailyEntry, PaymentStatus } from '@/types/dailyEntry';
+
+function computeDriverPayForReport(entry: DailyEntry, driver: Driver): number {
+  return entry.attendance === 'present' ? driver.dailyRate : 0;
+}
+
+function formatFuelAmount(litres: number): string {
+  return litres === 0
+    ? '0 L'
+    : `${Math.abs(litres)} L ${litres > 0 ? '(credit)' : '(owes fuel)'}`;
+}
+
+// Monthly-settlement drivers are paid via the Monthly Payments screen, which
+// updates a separate monthlyPayments doc rather than each entry's own
+// paymentStatus — so entry.paymentStatus alone is stale for them.
+function computeEntryPaymentStatus(
+  entry: DailyEntry,
+  monthlyPaymentStatus: PaymentStatus | null,
+): PaymentStatus {
+  if (entry.settlementType === 'monthly') {
+    return monthlyPaymentStatus ?? 'unpaid';
+  }
+  return entry.paymentStatus;
+}
 
 function buildReportHtml(
   driver: Driver,
   routeLabel: string,
   monthLabel: string,
   entries: DailyEntry[],
+  carriedForwardFuel: number,
+  fuelBalance: number,
+  monthlyPaymentStatus: PaymentStatus | null,
 ): string {
   const daysPresent = entries.filter(
     entry => entry.attendance === 'present',
   ).length;
-  const totalFuelCost = entries.reduce(
-    (sum, entry) => sum + computeEffectiveFuelCost(entry),
-    0,
-  );
   const totalDriverPay = entries.reduce(
-    (sum, entry) => sum + computeEffectiveDriverPay(entry),
+    (sum, entry) => sum + computeDriverPayForReport(entry, driver),
     0,
   );
   const totalUnpaid = entries
-    .filter(entry => entry.paymentStatus === 'unpaid')
-    .reduce((sum, entry) => sum + computeEffectiveDriverPay(entry), 0);
+    .filter(
+      entry =>
+        computeEntryPaymentStatus(entry, monthlyPaymentStatus) === 'unpaid',
+    )
+    .reduce((sum, entry) => sum + computeDriverPayForReport(entry, driver), 0);
+  const totalFuelTaken = entries.reduce(
+    (sum, entry) => sum + entry.fuelLitres,
+    0,
+  );
 
   const rows = entries
     .map(
@@ -39,12 +64,15 @@ function buildReportHtml(
           <td>${entry.route}</td>
           <td>${entry.vehicleType} · ${entry.vehicleNumber}</td>
           <td>${entry.fuelLitres} L</td>
-          <td>${formatCurrency(computeEffectiveFuelCost(entry))}</td>
-          <td>${formatCurrency(computeEffectiveDriverPay(entry))}</td>
+          <td>${formatCurrency(computeDriverPayForReport(entry, driver))}</td>
           <td>${
             entry.settlementType === 'sameDay' ? 'Same-day' : 'Monthly'
           }</td>
-          <td>${entry.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}</td>
+          <td>${
+            computeEntryPaymentStatus(entry, monthlyPaymentStatus) === 'paid'
+              ? 'Paid'
+              : 'Unpaid'
+          }</td>
         </tr>`,
     )
     .join('');
@@ -94,7 +122,6 @@ function buildReportHtml(
               <th>Route</th>
               <th>Vehicle</th>
               <th>Fuel</th>
-              <th>Fuel cost</th>
               <th>Driver pay</th>
               <th>Settlement</th>
               <th>Payment</th>
@@ -104,20 +131,24 @@ function buildReportHtml(
             ${
               rows.length > 0
                 ? rows
-                : '<tr><td colspan="9">No entries for this month</td></tr>'
+                : '<tr><td colspan="8">No entries for this month</td></tr>'
             }
           </tbody>
         </table>
         <div class="summary">
           <div><strong>Days present:</strong> ${daysPresent}</div>
-          <div><strong>Total fuel cost:</strong> ${formatCurrency(
-            totalFuelCost,
-          )}</div>
           <div><strong>Total driver pay:</strong> ${formatCurrency(
             totalDriverPay,
           )}</div>
           <div><strong>Unpaid amount:</strong> ${formatCurrency(
             totalUnpaid,
+          )}</div>
+          <div><strong>Total fuel taken this month:</strong> ${totalFuelTaken} L</div>
+          <div><strong>Carried forward fuel:</strong> ${formatFuelAmount(
+            carriedForwardFuel,
+          )}</div>
+          <div><strong>Fuel balance (end of month):</strong> ${formatFuelAmount(
+            fuelBalance,
           )}</div>
         </div>
       </body>
@@ -130,8 +161,19 @@ export async function shareDriverMonthlyReport(
   routeLabel: string,
   monthLabel: string,
   entries: DailyEntry[],
+  carriedForwardFuel: number,
+  fuelBalance: number,
+  monthlyPaymentStatus: PaymentStatus | null,
 ): Promise<void> {
-  const html = buildReportHtml(driver, routeLabel, monthLabel, entries);
+  const html = buildReportHtml(
+    driver,
+    routeLabel,
+    monthLabel,
+    entries,
+    carriedForwardFuel,
+    fuelBalance,
+    monthlyPaymentStatus,
+  );
   const fileName = `${driver.name.replace(/\s+/g, '_')}_${monthLabel.replace(
     /\s+/g,
     '_',

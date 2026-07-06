@@ -128,12 +128,24 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
             onPress={() => navigation.navigate('FuelPrice')}
           />
           <NavigationTile
+            label="Pump"
+            onPress={() => navigation.navigate('Pump')}
+          />
+          <NavigationTile
             label="Daily entries"
             onPress={() => navigation.navigate('DailyEntryList')}
           />
           <NavigationTile
             label="Monthly payments"
             onPress={() => navigation.navigate('MonthlyPayment')}
+          />
+          <NavigationTile
+            label="Summary"
+            onPress={() => navigation.navigate('Summary')}
+          />
+          <NavigationTile
+            label="Bill"
+            onPress={() => navigation.navigate('Bill')}
           />
         </View>
       </ScrollView>
