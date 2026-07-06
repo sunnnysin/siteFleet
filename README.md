@@ -28,7 +28,7 @@ The full implementation spec lives at [`sitefleet-transport-module-spec.md`](../
 ### Install dependencies
 
 ```sh
-npm install
+yarn install
 ```
 
 iOS only, first time and after native dependency changes:
@@ -51,15 +51,15 @@ cp .env.example .env
 Start Metro:
 
 ```sh
-npm start
+yarn start
 ```
 
 In a separate terminal:
 
 ```sh
-npm run android
+yarn android
 # or
-npm run ios
+yarn ios
 ```
 
 ## Project structure
