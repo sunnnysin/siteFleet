@@ -1,44 +1,54 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AppNavigator } from '@/navigation/AppNavigator';
+import { subscribeToAuthChanges, upsertUserProfile } from '@/firebase/auth';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { colors } from '@/theme/colors';
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+  const setUserProfile = useAuthStore(state => state.setUserProfile);
+  const setAuthLoading = useAuthStore(state => state.setAuthLoading);
+  const isAuthLoading = useAuthStore(state => state.isAuthLoading);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthChanges(user => {
+      if (user === null) {
+        setUserProfile(null);
+        setAuthLoading(false);
+        return;
+      }
+      void upsertUserProfile(user)
+        .then(setUserProfile)
+        .finally(() => setAuthLoading(false));
+    });
+    return unsubscribe;
+  }, [setUserProfile, setAuthLoading]);
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <View style={styles.container}>
+        {isAuthLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : (
+          <AppNavigator />
+        )}
+      </View>
     </SafeAreaProvider>
-  );
-}
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
   },
 });
 
