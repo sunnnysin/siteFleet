@@ -12,7 +12,7 @@ function computeDriverPayForReport(entry: DailyEntry, driver: Driver): number {
 function formatFuelAmount(litres: number): string {
   return litres === 0
     ? '0 L'
-    : `${Math.abs(litres)} L ${litres > 0 ? '(credit)' : '(owes fuel)'}`;
+    : `${Math.abs(litres)} L ${litres > 0 ? '(credit)' : '(fuel due)'}`;
 }
 
 // Monthly-settlement drivers are paid via the Monthly Payments screen, which

@@ -31,7 +31,7 @@ function DetailRow({ label, value }: DetailRowProps) {
 function formatFuelAmount(litres: number): string {
   return litres === 0
     ? '0 L'
-    : `${Math.abs(litres)} L ${litres > 0 ? '(credit)' : '(owes fuel)'}`;
+    : `${Math.abs(litres)} L ${litres > 0 ? '(credit)' : '(fuel due)'}`;
 }
 
 export function DriverDetailCard({
