@@ -33,6 +33,7 @@ import {
   MONTH_FORMAT,
   parseDateKey,
 } from '@/utils/dateUtils';
+import { dismissKeyboardAndWait } from '@/utils/navigationUtils';
 import { addMonths, format, parse } from 'date-fns';
 import type { TransportStackParamList } from '@/navigation/types';
 import type { Driver } from '@/types/driver';
@@ -75,13 +76,19 @@ export function DriverDetailScreen({
       }
       const [fetchedRoute, fetchedEntries, fetchedAllEntries, monthlyPayments] =
         await Promise.all([
-          fetchRouteById(fetchedDriver.routeId),
+          fetchedDriver.routeId.length > 0
+            ? fetchRouteById(fetchedDriver.routeId)
+            : Promise.resolve(null),
           fetchDailyEntriesForDriverAndMonth(driverId, selectedMonth),
           fetchAllDailyEntriesForDriver(driverId),
           computeMonthlyPayments(selectedMonth),
         ]);
       setDriver(fetchedDriver);
-      setRouteLabel(fetchedRoute?.name ?? 'Unknown route');
+      setRouteLabel(
+        fetchedDriver.routeId.length > 0
+          ? fetchedRoute?.name ?? 'Unknown route'
+          : 'Undecided',
+      );
       setEntries(fetchedEntries);
       setMonthlyPaymentStatus(
         monthlyPayments.find(payment => payment.driverId === driverId)
@@ -139,6 +146,7 @@ export function DriverDetailScreen({
     setIsDeleting(true);
     try {
       await deleteDriver(driverId);
+      await dismissKeyboardAndWait();
       navigation.goBack();
     } catch (error) {
       setErrorMessage(

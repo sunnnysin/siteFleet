@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const VEHICLE_TYPES = ['ACE', 'Bolero/PickUp'] as const;
 export type VehicleType = (typeof VEHICLE_TYPES)[number];
 
-export const DRIVER_TYPES = ['permanent', 'replacement'] as const;
+export const DRIVER_TYPES = ['permanent', 'temporary'] as const;
 export type DriverType = (typeof DRIVER_TYPES)[number];
 
 export interface Driver {
@@ -17,7 +17,6 @@ export interface Driver {
   routeId: string;
   dailyRate: number;
   driverType: DriverType;
-  replacementForDriverId: string | null;
   createdAt: string;
   isActive: boolean;
 }
@@ -43,7 +42,7 @@ export const driverFormSchema = z
       .trim()
       .regex(/^\d{4}$/, 'Enter a valid 4-digit vehicle number'),
     vehicleType: z.enum(VEHICLE_TYPES),
-    routeId: z.string().min(1, 'Route is required'),
+    routeId: z.string(),
     dailyRate: z
       .string()
       .trim()
@@ -52,17 +51,10 @@ export const driverFormSchema = z
         message: 'Enter a valid rate',
       }),
     driverType: z.enum(DRIVER_TYPES),
-    replacementForDriverId: z.string().nullable(),
   })
-  .refine(
-    data =>
-      data.driverType !== 'replacement' ||
-      (data.replacementForDriverId !== null &&
-        data.replacementForDriverId.length > 0),
-    {
-      message: 'Select which driver this replaces',
-      path: ['replacementForDriverId'],
-    },
-  );
+  .refine(data => data.driverType !== 'permanent' || data.routeId.length > 0, {
+    message: 'Route is required',
+    path: ['routeId'],
+  });
 
 export type DriverFormValues = z.infer<typeof driverFormSchema>;

@@ -19,10 +19,10 @@ import { SelectField } from '@/components/SelectField';
 import {
   createDriver,
   fetchDriverById,
-  fetchDrivers,
   updateDriver,
 } from '@/services/driverService';
 import { fetchRoutes } from '@/services/routeService';
+import { dismissKeyboardAndWait } from '@/utils/navigationUtils';
 import {
   driverFormSchema,
   VEHICLE_TYPES,
@@ -47,7 +47,7 @@ const VEHICLE_TYPE_OPTIONS = VEHICLE_TYPES.map(vehicleType => ({
 
 const DRIVER_TYPE_OPTIONS = [
   { label: 'Permanent', value: 'permanent' },
-  { label: 'Replacement', value: 'replacement' },
+  { label: 'Temporary', value: 'temporary' },
 ];
 
 function toDriverDraft(values: DriverFormValues): DriverDraft {
@@ -57,13 +57,9 @@ function toDriverDraft(values: DriverFormValues): DriverDraft {
     upiId: values.upiId,
     vehicleNumber: values.vehicleNumber,
     vehicleType: values.vehicleType,
-    routeId: values.routeId,
+    routeId: values.driverType === 'temporary' ? '' : values.routeId,
     dailyRate: Number(values.dailyRate),
     driverType: values.driverType,
-    replacementForDriverId:
-      values.driverType === 'replacement'
-        ? values.replacementForDriverId ?? null
-        : null,
     isActive: true,
   };
 }
@@ -79,7 +75,6 @@ export function AddEditDriverScreen({
   const [saveErrorMessage, setSaveErrorMessage] = useState<string | null>(null);
   const [existingDriver, setExistingDriver] = useState<Driver | null>(null);
   const [routes, setRoutes] = useState<Route[]>([]);
-  const [otherDrivers, setOtherDrivers] = useState<Driver[]>([]);
 
   const {
     control,
@@ -98,7 +93,6 @@ export function AddEditDriverScreen({
       routeId: '',
       dailyRate: '',
       driverType: 'permanent',
-      replacementForDriverId: null,
     },
   });
 
@@ -108,12 +102,8 @@ export function AddEditDriverScreen({
     setIsLoadingDriver(true);
     setLoadErrorMessage(null);
     try {
-      const [fetchedRoutes, fetchedDrivers] = await Promise.all([
-        fetchRoutes(),
-        fetchDrivers(),
-      ]);
+      const fetchedRoutes = await fetchRoutes();
       setRoutes(fetchedRoutes);
-      setOtherDrivers(fetchedDrivers.filter(driver => driver.id !== driverId));
 
       if (driverId !== undefined) {
         const driver = await fetchDriverById(driverId);
@@ -130,7 +120,6 @@ export function AddEditDriverScreen({
           routeId: driver.routeId,
           dailyRate: String(driver.dailyRate),
           driverType: driver.driverType,
-          replacementForDriverId: driver.replacementForDriverId,
         });
         setExistingDriver(driver);
       }
@@ -157,6 +146,7 @@ export function AddEditDriverScreen({
       } else if (existingDriver !== null) {
         await updateDriver({ ...existingDriver, ...draft });
       }
+      await dismissKeyboardAndWait();
       navigation.goBack();
     } catch (error) {
       setSaveErrorMessage(
@@ -194,11 +184,6 @@ export function AddEditDriverScreen({
   const routeOptions = routes.map(routeItem => ({
     label: `${routeItem.name} (${routeItem.description})`,
     value: routeItem.id,
-  }));
-
-  const replacementOptions = otherDrivers.map(driver => ({
-    label: driver.name,
-    value: driver.id,
   }));
 
   return (
@@ -284,22 +269,42 @@ export function AddEditDriverScreen({
           />
           <Controller
             control={control}
-            name="routeId"
+            name="driverType"
             render={({ field }) => (
               <SelectField
-                label="Route"
-                options={routeOptions}
+                label="Driver type"
+                options={DRIVER_TYPE_OPTIONS}
                 value={field.value}
                 onChange={field.onChange}
-                placeholder={
-                  routeOptions.length === 0
-                    ? 'Add a route first'
-                    : 'Select a route'
-                }
-                errorMessage={errors.routeId?.message}
+                errorMessage={errors.driverType?.message}
               />
             )}
           />
+          {driverType === 'permanent' ? (
+            <Controller
+              control={control}
+              name="routeId"
+              render={({ field }) => (
+                <SelectField
+                  label="Route"
+                  options={routeOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder={
+                    routeOptions.length === 0
+                      ? 'Add a route first'
+                      : 'Select a route'
+                  }
+                  errorMessage={errors.routeId?.message}
+                />
+              )}
+            />
+          ) : (
+            <Text style={styles.routeHint}>
+              Temporary drivers can go to any route — it is picked per day on
+              the Daily Entries screen.
+            </Text>
+          )}
           <Controller
             control={control}
             name="dailyRate"
@@ -313,36 +318,6 @@ export function AddEditDriverScreen({
               />
             )}
           />
-          <Controller
-            control={control}
-            name="driverType"
-            render={({ field }) => (
-              <SelectField
-                label="Driver type"
-                options={DRIVER_TYPE_OPTIONS}
-                value={field.value}
-                onChange={field.onChange}
-                errorMessage={errors.driverType?.message}
-              />
-            )}
-          />
-          {driverType === 'replacement' ? (
-            <Controller
-              control={control}
-              name="replacementForDriverId"
-              render={({ field }) => (
-                <SelectField
-                  label="Replacing driver"
-                  options={replacementOptions}
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="Select the driver being replaced"
-                  errorMessage={errors.replacementForDriverId?.message}
-                />
-              )}
-            />
-          ) : null}
-
           {saveErrorMessage !== null ? (
             <Text style={styles.saveError}>{saveErrorMessage}</Text>
           ) : null}
@@ -370,6 +345,10 @@ const styles = StyleSheet.create({
   },
   loadingIndicator: {
     marginTop: spacing.xl,
+  },
+  routeHint: {
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
   },
   saveError: {
     color: colors.danger,

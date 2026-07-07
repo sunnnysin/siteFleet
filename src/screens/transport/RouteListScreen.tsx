@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -10,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '@/components/EmptyState';
 import { RouteListItem } from '@/components/RouteListItem';
-import { fetchRoutes } from '@/services/routeService';
+import { deleteRoute, fetchRoutes } from '@/services/routeService';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -26,6 +27,7 @@ export function RouteListScreen({ navigation }: RouteListScreenProps) {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deletingRouteId, setDeletingRouteId] = useState<string | null>(null);
 
   const loadRoutes = useCallback(async () => {
     setIsLoading(true);
@@ -48,6 +50,37 @@ export function RouteListScreen({ navigation }: RouteListScreenProps) {
     });
     return unsubscribe;
   }, [navigation, loadRoutes]);
+
+  function handleDelete(route: Route): void {
+    Alert.alert(
+      'Delete route',
+      `Delete "${route.name}"? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => void confirmDelete(route),
+        },
+      ],
+    );
+  }
+
+  async function confirmDelete(route: Route): Promise<void> {
+    setDeletingRouteId(route.id);
+    try {
+      await deleteRoute(route.id);
+      setRoutes(previousRoutes =>
+        previousRoutes.filter(existingRoute => existingRoute.id !== route.id),
+      );
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Failed to delete route.',
+      );
+    } finally {
+      setDeletingRouteId(null);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -79,6 +112,8 @@ export function RouteListScreen({ navigation }: RouteListScreenProps) {
               onPress={() =>
                 navigation.navigate('AddEditRoute', { routeId: item.id })
               }
+              onDelete={() => handleDelete(item)}
+              isDeleting={deletingRouteId === item.id}
             />
           )}
         />

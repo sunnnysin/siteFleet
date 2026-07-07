@@ -18,6 +18,7 @@ import {
   fetchRouteById,
   updateRoute,
 } from '@/services/routeService';
+import { dismissKeyboardAndWait } from '@/utils/navigationUtils';
 import {
   routeFormSchema,
   type Route,
@@ -115,6 +116,7 @@ export function AddEditRouteScreen({
       } else if (existingRoute !== null) {
         await updateRoute({ ...existingRoute, ...draft });
       }
+      await dismissKeyboardAndWait();
       navigation.goBack();
     } catch (error) {
       setSaveErrorMessage(

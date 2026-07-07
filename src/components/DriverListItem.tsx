@@ -1,20 +1,36 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { colors } from '@/theme/colors';
 import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
+import phoneIcon from '@/assets/phone.png';
 import type { Driver } from '@/types/driver';
 
 interface DriverListItemProps {
   driver: Driver;
+  routeName: string;
+  fuelBalance: number;
   onPress: () => void;
   onToggleActive: () => void;
 }
 
 export function DriverListItem({
   driver,
+  routeName,
+  fuelBalance,
   onPress,
   onToggleActive,
 }: DriverListItemProps) {
+  function handleCall(): void {
+    void Linking.openURL(`tel:${driver.phone}`);
+  }
+
   return (
     <Pressable
       style={styles.row}
@@ -23,16 +39,27 @@ export function DriverListItem({
     >
       <View style={styles.details}>
         <Text style={styles.name}>{driver.name}</Text>
-        <Text style={styles.meta}>
-          {driver.phone} · {driver.upiId}
-        </Text>
+        <View style={styles.metaRow}>
+          <Text style={styles.metaInline}>
+            {driver.vehicleType} · {driver.vehicleNumber}
+          </Text>
+          <Text style={styles.separatorDot}>●</Text>
+          <Text style={styles.metaInline}>{routeName}</Text>
+          {fuelBalance > 0 ? (
+            <>
+              <Text style={styles.separatorDot}>●</Text>
+              <Text style={styles.fuelBalance}>{fuelBalance} L</Text>
+            </>
+          ) : null}
+        </View>
       </View>
-      <View
-        style={[
-          styles.statusDot,
-          driver.isActive ? styles.activeDot : styles.inactiveDot,
-        ]}
-      />
+      <Pressable onPress={handleCall} hitSlop={8}>
+        <Image
+          source={phoneIcon}
+          style={styles.callIcon}
+          resizeMode="contain"
+        />
+      </Pressable>
     </Pressable>
   );
 }
@@ -57,21 +84,28 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: '600',
   },
-  meta: {
-    ...typography.caption,
-    color: colors.textSecondary,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: spacing.xs,
   },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: radii.pill,
+  metaInline: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  separatorDot: {
+    color: colors.primary,
+    fontSize: 8,
+    marginHorizontal: spacing.md,
+  },
+  fuelBalance: {
+    ...typography.caption,
+    color: colors.success,
+    fontWeight: '600',
+  },
+  callIcon: {
+    width: 36,
+    height: 36,
     marginLeft: spacing.md,
-  },
-  activeDot: {
-    backgroundColor: colors.success,
-  },
-  inactiveDot: {
-    backgroundColor: colors.disabled,
   },
 });

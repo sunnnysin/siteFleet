@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
@@ -69,6 +70,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
+      Keyboard.dismiss();
       void loadSummary();
     });
     return unsubscribe;

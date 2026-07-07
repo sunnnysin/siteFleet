@@ -14,15 +14,21 @@ import { FormTextInput } from '@/components/FormTextInput';
 import { DriverListItem } from '@/components/DriverListItem';
 import { SegmentedTabs } from '@/components/SegmentedTabs';
 import { fetchDrivers, setDriverActiveStatus } from '@/services/driverService';
+import { fetchRoutes } from '@/services/routeService';
+import {
+  computeDriverFuelBalance,
+  fetchAllDailyEntriesForDriver,
+} from '@/services/dailyEntryService';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import type { TransportStackParamList } from '@/navigation/types';
 import type { Driver, DriverType } from '@/types/driver';
+import type { Route } from '@/types/route';
 
 const DRIVER_TYPE_TABS = [
   { label: 'Permanent', value: 'permanent' },
-  { label: 'Replacement', value: 'replacement' },
+  { label: 'Temporary', value: 'temporary' },
 ];
 
 type DriverListScreenProps = NativeStackScreenProps<
@@ -32,6 +38,10 @@ type DriverListScreenProps = NativeStackScreenProps<
 
 export function DriverListScreen({ navigation }: DriverListScreenProps) {
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [fuelBalanceByDriverId, setFuelBalanceByDriverId] = useState<
+    Map<string, number>
+  >(new Map());
   const [selectedDriverType, setSelectedDriverType] =
     useState<DriverType>('permanent');
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,8 +52,20 @@ export function DriverListScreen({ navigation }: DriverListScreenProps) {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const fetchedDrivers = await fetchDrivers();
+      const [fetchedDrivers, fetchedRoutes] = await Promise.all([
+        fetchDrivers(),
+        fetchRoutes(),
+      ]);
       setDrivers(fetchedDrivers);
+      setRoutes(fetchedRoutes);
+
+      const fuelBalanceEntries = await Promise.all(
+        fetchedDrivers.map(async driver => {
+          const entries = await fetchAllDailyEntriesForDriver(driver.id);
+          return [driver.id, computeDriverFuelBalance(entries)] as const;
+        }),
+      );
+      setFuelBalanceByDriverId(new Map(fuelBalanceEntries));
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to load drivers.',
@@ -59,6 +81,8 @@ export function DriverListScreen({ navigation }: DriverListScreenProps) {
     });
     return unsubscribe;
   }, [navigation, loadDrivers]);
+
+  const routeNameById = new Map(routes.map(route => [route.id, route.name]));
 
   async function handleToggleActive(driver: Driver): Promise<void> {
     try {
@@ -127,6 +151,8 @@ export function DriverListScreen({ navigation }: DriverListScreenProps) {
           renderItem={({ item }) => (
             <DriverListItem
               driver={item}
+              routeName={routeNameById.get(item.routeId) ?? 'Undecided'}
+              fuelBalance={fuelBalanceByDriverId.get(item.id) ?? 0}
               onPress={() =>
                 navigation.navigate('DriverDetail', { driverId: item.id })
               }

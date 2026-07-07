@@ -10,19 +10,29 @@ import { getCurrentUserId } from '@/firebase/auth';
 import { FIRESTORE_COLLECTIONS } from '@/types/collections';
 import type { Driver, DriverDraft } from '@/types/driver';
 
+function normalizeDriverType(driver: Driver): Driver {
+  return driver.driverType === 'permanent'
+    ? driver
+    : { ...driver, driverType: 'temporary' };
+}
+
 export async function fetchDrivers(): Promise<Driver[]> {
   const drivers = await queryCollection<Driver>(FIRESTORE_COLLECTIONS.drivers, [
     where('ownerId', '==', getCurrentUserId()),
   ]);
-  return [...drivers].sort((first, second) =>
-    first.name.localeCompare(second.name),
-  );
+  return [...drivers]
+    .map(normalizeDriverType)
+    .sort((first, second) => first.name.localeCompare(second.name));
 }
 
 export async function fetchDriverById(
   driverId: string,
 ): Promise<Driver | null> {
-  return getDocumentById<Driver>(FIRESTORE_COLLECTIONS.drivers, driverId);
+  const driver = await getDocumentById<Driver>(
+    FIRESTORE_COLLECTIONS.drivers,
+    driverId,
+  );
+  return driver === null ? null : normalizeDriverType(driver);
 }
 
 export async function createDriver(draft: DriverDraft): Promise<Driver> {

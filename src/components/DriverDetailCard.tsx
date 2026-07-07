@@ -48,7 +48,7 @@ export function DriverDetailCard({
         <View style={styles.headerText}>
           <Text style={styles.name}>{driver.name}</Text>
           <Text style={styles.driverType}>
-            {driver.driverType === 'permanent' ? 'Permanent' : 'Replacement'}
+            {driver.driverType === 'permanent' ? 'Permanent' : 'Temporary'}
           </Text>
         </View>
         <View
