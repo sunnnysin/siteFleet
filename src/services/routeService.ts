@@ -1,5 +1,6 @@
 import { where } from 'firebase/firestore';
 import {
+  deleteDocumentById,
   generateDocumentId,
   getDocumentById,
   queryCollection,
@@ -37,4 +38,8 @@ export async function createRoute(draft: RouteDraft): Promise<Route> {
 export async function updateRoute(route: Route): Promise<Route> {
   await setDocumentById(FIRESTORE_COLLECTIONS.routes, route.id, route);
   return route;
+}
+
+export async function deleteRoute(routeId: string): Promise<void> {
+  await deleteDocumentById(FIRESTORE_COLLECTIONS.routes, routeId);
 }

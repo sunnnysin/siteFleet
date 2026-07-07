@@ -1,5 +1,11 @@
 import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  AppState,
+  Keyboard,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppNavigator } from '@/navigation/AppNavigator';
 import { subscribeToAuthChanges, upsertUserProfile } from '@/firebase/auth';
@@ -24,6 +30,15 @@ function App() {
     });
     return unsubscribe;
   }, [setUserProfile, setAuthLoading]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        Keyboard.dismiss();
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 
   return (
     <SafeAreaProvider>

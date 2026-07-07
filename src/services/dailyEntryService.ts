@@ -50,7 +50,7 @@ export function computeDriverFuelBalance(entries: DailyEntry[]): number {
 }
 
 export function inferDriverTypeFromEntry(entry: DailyEntry): DriverType {
-  return entry.settlementType === 'sameDay' ? 'replacement' : 'permanent';
+  return entry.settlementType === 'sameDay' ? 'temporary' : 'permanent';
 }
 
 export async function fetchDailyEntriesForDate(
@@ -150,7 +150,7 @@ export async function saveDailyEntry(
     fuelLitres: draft.fuelLitres,
     routeFuelLitres: route?.fuelLitres ?? 0,
     fuelCost,
-    settlementType: driver.driverType === 'replacement' ? 'sameDay' : 'monthly',
+    settlementType: driver.driverType === 'temporary' ? 'sameDay' : 'monthly',
     paymentStatus: existingEntry?.paymentStatus ?? 'unpaid',
     paidAt: existingEntry?.paidAt ?? null,
   };

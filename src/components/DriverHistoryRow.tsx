@@ -16,6 +16,9 @@ export function DriverHistoryRow({ entry }: DriverHistoryRowProps) {
         <Text style={styles.date}>{formatDisplayDate(entry.date)}</Text>
         <Text style={styles.route}>{entry.route}</Text>
       </View>
+      {entry.fuelLitres > 0 ? (
+        <Text style={styles.fuel}>{entry.fuelLitres} L</Text>
+      ) : null}
       <Text
         style={[
           styles.attendance,
@@ -52,6 +55,11 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     marginTop: spacing.xs / 2,
+  },
+  fuel: {
+    ...typography.caption,
+    color: colors.success,
+    fontWeight: '600',
   },
   attendance: {
     ...typography.caption,

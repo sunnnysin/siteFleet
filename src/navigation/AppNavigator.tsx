@@ -1,3 +1,4 @@
+import { Keyboard } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LoginScreen } from '@/screens/LoginScreen';
@@ -11,7 +12,7 @@ export function AppNavigator() {
   const userProfile = useAuthStore(state => state.userProfile);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer onStateChange={() => Keyboard.dismiss()}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {userProfile === null ? (
           <Stack.Screen name="Login" component={LoginScreen} />

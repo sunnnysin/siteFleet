@@ -24,6 +24,7 @@ import {
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { formatDisplayDate } from '@/utils/dateUtils';
+import { dismissKeyboardAndWait } from '@/utils/navigationUtils';
 import type { TransportStackParamList } from '@/navigation/types';
 import type { AttendanceStatus, DailyEntry } from '@/types/dailyEntry';
 import type { Driver } from '@/types/driver';
@@ -36,8 +37,7 @@ function buildFallbackDriverSource(entry: DailyEntry): DailyEntryDriverSource {
     vehicleType: entry.vehicleType as Driver['vehicleType'],
     vehicleNumber: entry.vehicleNumber,
     dailyRate: entry.dailyRate,
-    driverType:
-      entry.settlementType === 'sameDay' ? 'replacement' : 'permanent',
+    driverType: entry.settlementType === 'sameDay' ? 'temporary' : 'permanent',
   };
 }
 
@@ -125,7 +125,7 @@ export function AddEditDailyEntryScreen({
     setSelectedDriverId(newDriverId);
     const driver = availableDrivers.find(item => item.id === newDriverId);
     if (driver !== undefined) {
-      setSelectedRouteId(driver.routeId);
+      setSelectedRouteId(driver.routeId.length > 0 ? driver.routeId : null);
     }
   }
 
@@ -138,7 +138,7 @@ export function AddEditDailyEntryScreen({
       setSaveErrorMessage('Select a driver.');
       return;
     }
-    if (selectedRouteId === null) {
+    if (selectedRouteId === null || selectedRouteId.length === 0) {
       setSaveErrorMessage('Select a route.');
       return;
     }
@@ -166,6 +166,7 @@ export function AddEditDailyEntryScreen({
         attendance,
         fuelLitres: parsedFuelLitres,
       });
+      await dismissKeyboardAndWait();
       navigation.goBack();
     } catch (error) {
       setSaveErrorMessage(

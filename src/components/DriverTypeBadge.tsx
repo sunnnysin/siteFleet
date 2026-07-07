@@ -10,7 +10,7 @@ interface DriverTypeBadgeProps {
 
 const DRIVER_TYPE_LABELS: Record<DriverType, string> = {
   permanent: 'Permanent',
-  replacement: 'Replacement',
+  temporary: 'Temporary',
 };
 
 export function DriverTypeBadge({ driverType }: DriverTypeBadgeProps) {
@@ -18,7 +18,7 @@ export function DriverTypeBadge({ driverType }: DriverTypeBadgeProps) {
     <View
       style={[
         styles.badge,
-        driverType === 'permanent' ? styles.permanent : styles.replacement,
+        driverType === 'permanent' ? styles.permanent : styles.temporary,
       ]}
     >
       <Text
@@ -26,7 +26,7 @@ export function DriverTypeBadge({ driverType }: DriverTypeBadgeProps) {
           styles.label,
           driverType === 'permanent'
             ? styles.permanentLabel
-            : styles.replacementLabel,
+            : styles.temporaryLabel,
         ]}
       >
         {DRIVER_TYPE_LABELS[driverType]}
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     backgroundColor: `${colors.success}1A`,
     borderColor: `${colors.success}40`,
   },
-  replacement: {
+  temporary: {
     backgroundColor: `${colors.danger}1A`,
     borderColor: `${colors.danger}40`,
   },
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   permanentLabel: {
     color: colors.success,
   },
-  replacementLabel: {
+  temporaryLabel: {
     color: colors.danger,
   },
 });

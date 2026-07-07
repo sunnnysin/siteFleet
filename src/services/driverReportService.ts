@@ -108,7 +108,7 @@ function buildReportHtml(
             driver.dailyRate,
           )}</span>
           <span><strong>Type:</strong> ${
-            driver.driverType === 'permanent' ? 'Permanent' : 'Replacement'
+            driver.driverType === 'permanent' ? 'Permanent' : 'Temporary'
           }</span>
           <span><strong>UPI ID:</strong> ${
             driver.upiId.length > 0 ? driver.upiId : '-'

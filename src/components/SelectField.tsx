@@ -54,28 +54,30 @@ export function SelectField({
       </Pressable>
       {hasError ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
-      <Modal visible={isOpen} transparent animationType="fade">
-        <Pressable style={styles.backdrop} onPress={() => setIsOpen(false)}>
-          <Pressable style={styles.sheet} onPress={() => {}}>
-            <Text style={styles.sheetTitle}>{label}</Text>
-            <FlatList
-              data={options}
-              keyExtractor={option => option.value}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={styles.option}
-                  onPress={() => {
-                    onChange(item.value);
-                    setIsOpen(false);
-                  }}
-                >
-                  <Text style={styles.optionLabel}>{item.label}</Text>
-                </Pressable>
-              )}
-            />
+      {isOpen ? (
+        <Modal visible transparent animationType="fade">
+          <Pressable style={styles.backdrop} onPress={() => setIsOpen(false)}>
+            <Pressable style={styles.sheet} onPress={() => {}}>
+              <Text style={styles.sheetTitle}>{label}</Text>
+              <FlatList
+                data={options}
+                keyExtractor={option => option.value}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={styles.option}
+                    onPress={() => {
+                      onChange(item.value);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <Text style={styles.optionLabel}>{item.label}</Text>
+                  </Pressable>
+                )}
+              />
+            </Pressable>
           </Pressable>
-        </Pressable>
-      </Modal>
+        </Modal>
+      ) : null}
     </View>
   );
 }
