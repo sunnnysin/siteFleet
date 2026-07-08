@@ -1,9 +1,11 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { addMonths, format, parse, subMonths } from 'date-fns';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { formatMonthKey, MONTH_FORMAT } from '@/utils/dateUtils';
+import { MonthPickerModal } from '@/components/MonthPickerModal';
 
 interface MonthNavigatorProps {
   selectedMonth: string;
@@ -15,22 +17,42 @@ export function MonthNavigator({
   onChange,
 }: MonthNavigatorProps) {
   const parsedMonth = parse(selectedMonth, MONTH_FORMAT, new Date());
+  const [isPickerVisible, setIsPickerVisible] = useState(false);
 
   return (
     <View style={styles.container}>
-      <Pressable
+      <TouchableOpacity
         style={styles.arrowButton}
         onPress={() => onChange(formatMonthKey(subMonths(parsedMonth, 1)))}
+        activeOpacity={0.7}
       >
         <Text style={styles.arrow}>‹</Text>
-      </Pressable>
-      <Text style={styles.monthLabel}>{format(parsedMonth, 'MMMM yyyy')}</Text>
-      <Pressable
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => setIsPickerVisible(true)}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.monthLabel}>
+          {format(parsedMonth, 'MMMM yyyy')}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
         style={styles.arrowButton}
         onPress={() => onChange(formatMonthKey(addMonths(parsedMonth, 1)))}
+        activeOpacity={0.7}
       >
         <Text style={styles.arrow}>›</Text>
-      </Pressable>
+      </TouchableOpacity>
+
+      <MonthPickerModal
+        visible={isPickerVisible}
+        selectedMonth={selectedMonth}
+        onSelect={month => {
+          onChange(month);
+          setIsPickerVisible(false);
+        }}
+        onClose={() => setIsPickerVisible(false)}
+      />
     </View>
   );
 }

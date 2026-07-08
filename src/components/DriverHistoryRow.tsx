@@ -2,22 +2,34 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
-import { formatDisplayDate } from '@/utils/dateUtils';
+import { formatCurrency } from '@/utils/currencyUtils';
+import { formatDisplayDateWithWeekday } from '@/utils/dateUtils';
 import type { DailyEntry } from '@/types/dailyEntry';
 
 interface DriverHistoryRowProps {
   entry: DailyEntry;
+  advanceAmount?: number;
+  isLast?: boolean;
 }
 
-export function DriverHistoryRow({ entry }: DriverHistoryRowProps) {
+export function DriverHistoryRow({
+  entry,
+  advanceAmount,
+  isLast = false,
+}: DriverHistoryRowProps) {
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, isLast && styles.rowLast]}>
       <View style={styles.dateColumn}>
-        <Text style={styles.date}>{formatDisplayDate(entry.date)}</Text>
+        <Text style={styles.date}>
+          {formatDisplayDateWithWeekday(entry.date)}
+        </Text>
         <Text style={styles.route}>{entry.route}</Text>
       </View>
       {entry.fuelLitres > 0 ? (
         <Text style={styles.fuel}>{entry.fuelLitres} L</Text>
+      ) : null}
+      {advanceAmount !== undefined && advanceAmount > 0 ? (
+        <Text style={styles.advance}>{formatCurrency(advanceAmount)}</Text>
       ) : null}
       <Text
         style={[
@@ -38,10 +50,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     gap: spacing.sm,
+  },
+  rowLast: {
+    borderBottomWidth: 0,
   },
   dateColumn: {
     flex: 1.4,
@@ -59,6 +75,11 @@ const styles = StyleSheet.create({
   fuel: {
     ...typography.caption,
     color: colors.success,
+    fontWeight: '600',
+  },
+  advance: {
+    ...typography.caption,
+    color: colors.warning,
     fontWeight: '600',
   },
   attendance: {

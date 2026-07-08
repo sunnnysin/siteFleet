@@ -1,4 +1,9 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import { GoogleLogo } from '@/components/GoogleLogo';
 import { colors } from '@/theme/colors';
 import { radii, spacing } from '@/theme/spacing';
@@ -14,11 +19,12 @@ export function GoogleSignInButton({
   isLoading = false,
 }: GoogleSignInButtonProps) {
   return (
-    <Pressable
+    <TouchableOpacity
       accessibilityRole="button"
       onPress={onPress}
       disabled={isLoading}
       style={[styles.button, isLoading ? styles.disabledButton : null]}
+      activeOpacity={0.7}
     >
       {isLoading ? (
         <ActivityIndicator color={colors.textPrimary} />
@@ -28,7 +34,7 @@ export function GoogleSignInButton({
           <Text style={styles.label}>Sign in with Google</Text>
         </>
       )}
-    </Pressable>
+    </TouchableOpacity>
   );
 }
 

@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -28,7 +28,12 @@ export function CustomTabBar({
         }
 
         return (
-          <Pressable key={route.key} style={styles.tab} onPress={handlePress}>
+          <TouchableOpacity
+            key={route.key}
+            style={styles.tab}
+            onPress={handlePress}
+            activeOpacity={0.7}
+          >
             <View
               style={[
                 styles.indicator,
@@ -47,7 +52,7 @@ export function CustomTabBar({
                 {label}
               </Text>
             </View>
-          </Pressable>
+          </TouchableOpacity>
         );
       })}
     </View>

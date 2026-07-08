@@ -59,7 +59,7 @@ export async function fetchPumpEntriesForMonth(
     ],
   );
   return [...entries].sort((first, second) =>
-    second.date.localeCompare(first.date),
+    first.date.localeCompare(second.date),
   );
 }
 

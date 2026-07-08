@@ -14,6 +14,7 @@ export type TransportStackParamList = {
   DriverList: undefined;
   DriverDetail: { driverId: string };
   AddEditDriver: { driverId?: string };
+  AddDriverAdvance: { driverId: string };
   RouteList: undefined;
   AddEditRoute: { routeId?: string };
   FuelPrice: undefined;

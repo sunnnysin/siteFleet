@@ -127,3 +127,19 @@ export async function markMonthlyPaymentPaid(
   );
   return paidPayment;
 }
+
+export async function markMonthlyPaymentUnpaid(
+  payment: MonthlyPayment,
+): Promise<MonthlyPayment> {
+  const unpaidPayment: MonthlyPayment = {
+    ...payment,
+    paymentStatus: 'unpaid',
+    paidAt: null,
+  };
+  await setDocumentById(
+    FIRESTORE_COLLECTIONS.monthlyPayments,
+    unpaidPayment.id,
+    unpaidPayment,
+  );
+  return unpaidPayment;
+}

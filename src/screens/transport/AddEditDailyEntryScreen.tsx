@@ -23,7 +23,7 @@ import {
 } from '@/services/dailyEntryService';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
-import { formatDisplayDate } from '@/utils/dateUtils';
+import { formatDisplayDateWithWeekday } from '@/utils/dateUtils';
 import { dismissKeyboardAndWait } from '@/utils/navigationUtils';
 import type { TransportStackParamList } from '@/navigation/types';
 import type { AttendanceStatus, DailyEntry } from '@/types/dailyEntry';
@@ -204,6 +204,7 @@ export function AddEditDailyEntryScreen({
   const driverOptions = availableDrivers.map(driver => ({
     label: driver.name,
     value: driver.id,
+    badge: driver.driverType === 'temporary' ? 'Temporary' : undefined,
   }));
 
   const routeOptions = routes.map(routeItem => ({
@@ -216,7 +217,9 @@ export function AddEditDailyEntryScreen({
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.dateLabel}>{formatDisplayDate(date)}</Text>
+        <Text style={styles.dateLabel}>
+          {formatDisplayDateWithWeekday(date)}
+        </Text>
 
         {isEditMode ? (
           <View style={styles.lockedDriverField}>

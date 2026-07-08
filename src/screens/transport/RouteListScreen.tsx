@@ -3,9 +3,9 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -119,12 +119,13 @@ export function RouteListScreen({ navigation }: RouteListScreenProps) {
         />
       )}
 
-      <Pressable
+      <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('AddEditRoute', {})}
+        activeOpacity={0.7}
       >
         <Text style={styles.fabLabel}>+</Text>
-      </Pressable>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

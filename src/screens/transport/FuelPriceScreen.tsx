@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
-  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,7 +21,7 @@ import {
 import { formatCurrency } from '@/utils/currencyUtils';
 import {
   currentMonthKey,
-  formatDisplayDate,
+  formatDisplayDateWithWeekday,
   todayKey,
 } from '@/utils/dateUtils';
 import { colors } from '@/theme/colors';
@@ -111,58 +111,62 @@ export function FuelPriceScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <View style={styles.form}>
-        <View style={styles.dateNavigator}>
-          <DateNavigator
-            selectedDate={selectedDate}
-            onChange={setSelectedDate}
+      <ScrollView contentContainerStyle={styles.list}>
+        <View style={styles.form}>
+          <View style={styles.dateNavigator}>
+            <DateNavigator
+              selectedDate={selectedDate}
+              onChange={setSelectedDate}
+            />
+          </View>
+          <FormTextInput
+            label="Price per litre"
+            value={priceInput}
+            onChangeText={setPriceInput}
+            keyboardType="decimal-pad"
+            errorMessage={saveErrorMessage ?? undefined}
+          />
+          <PrimaryButton
+            label="Save"
+            onPress={() => void handleSave()}
+            isLoading={isSaving}
           />
         </View>
-        <FormTextInput
-          label="Price per litre"
-          value={priceInput}
-          onChangeText={setPriceInput}
-          keyboardType="decimal-pad"
-          errorMessage={saveErrorMessage ?? undefined}
-        />
-        <PrimaryButton
-          label="Save"
-          onPress={() => void handleSave()}
-          isLoading={isSaving}
-        />
-      </View>
 
-      <Text style={styles.sectionTitle}>Price history</Text>
-      <MonthNavigator
-        selectedMonth={selectedMonth}
-        onChange={setSelectedMonth}
-      />
+        <Text style={styles.sectionTitle}>Price history</Text>
+        <MonthNavigator
+          selectedMonth={selectedMonth}
+          onChange={setSelectedMonth}
+        />
 
-      {monthPrices.length === 0 ? (
-        <EmptyState
-          title="No history yet"
-          message="Fuel prices you set this month will appear here."
-        />
-      ) : (
-        <FlatList
-          data={monthPrices}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <Pressable
-              style={styles.historyRow}
-              onPress={() => setSelectedDate(item.date)}
-            >
-              <Text style={styles.historyDate}>
-                {formatDisplayDate(item.date)}
-              </Text>
-              <Text style={styles.historyPrice}>
-                {formatCurrency(item.pricePerLitre)}
-              </Text>
-            </Pressable>
-          )}
-        />
-      )}
+        {monthPrices.length === 0 ? (
+          <EmptyState
+            title="No history yet"
+            message="Fuel prices you set this month will appear here."
+          />
+        ) : (
+          <View style={styles.cardContainer}>
+            {monthPrices.map((item, index) => (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.historyRow,
+                  index === monthPrices.length - 1 && styles.historyRowLast,
+                ]}
+                onPress={() => setSelectedDate(item.date)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.historyDate}>
+                  {formatDisplayDateWithWeekday(item.date)}
+                </Text>
+                <Text style={styles.historyPrice}>
+                  {formatCurrency(item.pricePerLitre)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -189,14 +193,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   list: {
-    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
+  cardContainer: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: 'white',
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 2.54,
+    elevation: 3,
+    borderRadius: 8,
   },
   historyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  historyRowLast: {
+    borderBottomWidth: 0,
   },
   historyDate: {
     ...typography.body,

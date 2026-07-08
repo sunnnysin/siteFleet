@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@/theme/colors';
 import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -24,17 +24,18 @@ export function SegmentedTabs({
       {options.map(option => {
         const isSelected = option.value === value;
         return (
-          <Pressable
+          <TouchableOpacity
             key={option.value}
             style={[styles.tab, isSelected ? styles.selectedTab : null]}
             onPress={() => onChange(option.value)}
+            activeOpacity={0.7}
           >
             <Text
               style={[styles.label, isSelected ? styles.selectedLabel : null]}
             >
               {option.label}
             </Text>
-          </Pressable>
+          </TouchableOpacity>
         );
       })}
     </View>

@@ -1,28 +1,38 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { colors } from '@/theme/colors';
-import { radii, spacing } from '@/theme/spacing';
+import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 
 interface NavigationTileProps {
   label: string;
   onPress: () => void;
+  isLast?: boolean;
 }
 
-export function NavigationTile({ label, onPress }: NavigationTileProps) {
+export function NavigationTile({
+  label,
+  onPress,
+  isLast = false,
+}: NavigationTileProps) {
   return (
-    <Pressable style={styles.tile} onPress={onPress}>
+    <TouchableOpacity
+      style={[styles.tile, isLast && styles.tileLast]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <Text style={styles.label}>{label}</Text>
-    </Pressable>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   tile: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.md,
     padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tileLast: {
+    borderBottomWidth: 0,
   },
   label: {
     ...typography.body,

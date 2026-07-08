@@ -1,9 +1,9 @@
 import {
   ActivityIndicator,
   Image,
-  Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { DriverTypeBadge } from '@/components/DriverTypeBadge';
@@ -38,7 +38,7 @@ export function DailyEntryRow({
   isDeleting,
 }: DailyEntryRowProps) {
   return (
-    <Pressable style={styles.row} onPress={onPress}>
+    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.header}>
         <Text style={styles.route}>{entry.route}</Text>
         <View style={styles.headerBadges}>
@@ -61,11 +61,12 @@ export function DailyEntryRow({
         >
           {entry.attendance === 'present' ? 'Present' : 'Absent'}
         </Text>
-        <Pressable
+        <TouchableOpacity
           style={styles.deleteButton}
           onPress={onDelete}
           disabled={isDeleting}
           hitSlop={8}
+          activeOpacity={0.7}
         >
           {isDeleting ? (
             <ActivityIndicator size="small" color={colors.danger} />
@@ -76,7 +77,7 @@ export function DailyEntryRow({
               resizeMode="contain"
             />
           )}
-        </Pressable>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.figuresRow}>
@@ -95,18 +96,19 @@ export function DailyEntryRow({
         </Text>
         {entry.settlementType === 'sameDay' &&
         entry.paymentStatus === 'unpaid' ? (
-          <Pressable
+          <TouchableOpacity
             style={styles.settleButton}
             onPress={onSettleNow}
             disabled={isSettling}
+            activeOpacity={0.7}
           >
             <Text style={styles.settleLabel}>
               {isSettling ? 'Opening UPI…' : 'Settle now'}
             </Text>
-          </Pressable>
+          </TouchableOpacity>
         ) : null}
       </View>
-    </Pressable>
+    </TouchableOpacity>
   );
 }
 

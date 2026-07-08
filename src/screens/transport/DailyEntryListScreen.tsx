@@ -3,10 +3,10 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -246,14 +246,15 @@ export function DailyEntryListScreen({
               />
             )}
           />
-          <Pressable
+          <TouchableOpacity
             style={styles.fab}
             onPress={() =>
               navigation.navigate('AddEditDailyEntry', { date: selectedDate })
             }
+            activeOpacity={0.7}
           >
             <Text style={styles.fabLabel}>+</Text>
-          </Pressable>
+          </TouchableOpacity>
         </>
       )}
     </SafeAreaView>

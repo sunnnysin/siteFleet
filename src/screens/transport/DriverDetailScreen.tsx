@@ -2,13 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { DriverAdvanceRow } from '@/components/DriverAdvanceRow';
 import { DriverDetailCard } from '@/components/DriverDetailCard';
 import { DriverHistoryRow } from '@/components/DriverHistoryRow';
 import { EmptyState } from '@/components/EmptyState';
@@ -17,9 +18,12 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { deleteDriver, fetchDriverById } from '@/services/driverService';
 import {
   computeDriverFuelBalance,
-  fetchAllDailyEntriesForDriver,
   fetchDailyEntriesForDriverAndMonth,
 } from '@/services/dailyEntryService';
+import {
+  computeTotalAdvance,
+  fetchDriverAdvancesForMonth,
+} from '@/services/driverAdvanceService';
 import { fetchRouteById } from '@/services/routeService';
 import { shareDriverMonthlyReport } from '@/services/driverReportService';
 import { computeMonthlyPayments } from '@/services/paymentService';
@@ -27,17 +31,22 @@ import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { formatCurrency } from '@/utils/currencyUtils';
-import {
-  currentMonthKey,
-  formatDateKey,
-  MONTH_FORMAT,
-  parseDateKey,
-} from '@/utils/dateUtils';
+import { currentMonthKey, MONTH_FORMAT } from '@/utils/dateUtils';
 import { dismissKeyboardAndWait } from '@/utils/navigationUtils';
-import { addMonths, format, parse } from 'date-fns';
+import { format, parse } from 'date-fns';
 import type { TransportStackParamList } from '@/navigation/types';
 import type { Driver } from '@/types/driver';
+import type { DriverAdvance } from '@/types/driverAdvance';
 import type { DailyEntry, PaymentStatus } from '@/types/dailyEntry';
+
+type HistoryRowItem =
+  | {
+      kind: 'entry';
+      date: string;
+      entry: DailyEntry;
+      advanceAmount?: number;
+    }
+  | { kind: 'advance'; date: string; advance: DriverAdvance };
 
 type DriverDetailScreenProps = NativeStackScreenProps<
   TransportStackParamList,
@@ -53,7 +62,7 @@ export function DriverDetailScreen({
   const [routeLabel, setRouteLabel] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey());
   const [entries, setEntries] = useState<DailyEntry[]>([]);
-  const [carriedForwardFuel, setCarriedForwardFuel] = useState(0);
+  const [advances, setAdvances] = useState<DriverAdvance[]>([]);
   const [fuelBalance, setFuelBalance] = useState(0);
   const [monthlyPaymentStatus, setMonthlyPaymentStatus] =
     useState<PaymentStatus | null>(null);
@@ -74,13 +83,13 @@ export function DriverDetailScreen({
         setErrorMessage('Driver not found.');
         return;
       }
-      const [fetchedRoute, fetchedEntries, fetchedAllEntries, monthlyPayments] =
+      const [fetchedRoute, fetchedEntries, fetchedAdvances, monthlyPayments] =
         await Promise.all([
           fetchedDriver.routeId.length > 0
             ? fetchRouteById(fetchedDriver.routeId)
             : Promise.resolve(null),
           fetchDailyEntriesForDriverAndMonth(driverId, selectedMonth),
-          fetchAllDailyEntriesForDriver(driverId),
+          fetchDriverAdvancesForMonth(driverId, selectedMonth),
           computeMonthlyPayments(selectedMonth),
         ]);
       setDriver(fetchedDriver);
@@ -90,23 +99,12 @@ export function DriverDetailScreen({
           : 'Undecided',
       );
       setEntries(fetchedEntries);
+      setAdvances(fetchedAdvances);
       setMonthlyPaymentStatus(
         monthlyPayments.find(payment => payment.driverId === driverId)
           ?.paymentStatus ?? null,
       );
-
-      const monthStartKey = `${selectedMonth}-01`;
-      const nextMonthStartKey = formatDateKey(
-        addMonths(parseDateKey(monthStartKey), 1),
-      );
-      const carriedForwardEntries = fetchedAllEntries.filter(
-        entry => entry.date < monthStartKey,
-      );
-      const entriesThroughMonth = fetchedAllEntries.filter(
-        entry => entry.date < nextMonthStartKey,
-      );
-      setCarriedForwardFuel(computeDriverFuelBalance(carriedForwardEntries));
-      setFuelBalance(computeDriverFuelBalance(entriesThroughMonth));
+      setFuelBalance(computeDriverFuelBalance(fetchedEntries));
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to load driver.',
@@ -173,8 +171,8 @@ export function DriverDetailScreen({
         routeLabel,
         monthLabel,
         entries,
-        carriedForwardFuel,
         fuelBalance,
+        advanceTotal,
         monthlyPaymentStatus,
       );
     } catch (error) {
@@ -219,56 +217,105 @@ export function DriverDetailScreen({
     (sum, entry) => sum + entry.fuelLitres,
     0,
   );
+  const advanceTotal = computeTotalAdvance(advances);
+
+  const advanceAmountByDate = new Map(
+    advances.map(advance => [advance.date, advance.amount]),
+  );
+  const entryDates = new Set(entries.map(entry => entry.date));
+
+  const historyRows: HistoryRowItem[] = [
+    ...entries.map(
+      (entry): HistoryRowItem => ({
+        kind: 'entry',
+        date: entry.date,
+        entry,
+        advanceAmount: advanceAmountByDate.get(entry.date),
+      }),
+    ),
+    ...advances
+      .filter(advance => !entryDates.has(advance.date))
+      .map(
+        (advance): HistoryRowItem => ({
+          kind: 'advance',
+          date: advance.date,
+          advance,
+        }),
+      ),
+  ].sort((first, second) => first.date.localeCompare(second.date));
 
   return (
     <SafeAreaView style={styles.container} edges={[]}>
-      <FlatList
-        data={entries}
-        keyExtractor={entry => entry.id}
-        contentContainerStyle={styles.list}
-        ListHeaderComponent={
-          <View>
-            <View style={styles.monthNavigator}>
-              <MonthNavigator
-                selectedMonth={selectedMonth}
-                onChange={setSelectedMonth}
-              />
-            </View>
-            <DriverDetailCard
-              driver={driver}
-              routeLabel={routeLabel}
-              monthlyFuelTaken={totalMonthlyFuel}
-              carriedForwardFuel={carriedForwardFuel}
-              fuelBalance={fuelBalance}
-              onEdit={() => navigation.navigate('AddEditDriver', { driverId })}
+      <ScrollView contentContainerStyle={styles.list}>
+        <View style={styles.monthNavigator}>
+          <MonthNavigator
+            selectedMonth={selectedMonth}
+            onChange={setSelectedMonth}
+          />
+        </View>
+        <DriverDetailCard
+          driver={driver}
+          routeLabel={routeLabel}
+          monthlyFuelTaken={totalMonthlyFuel}
+          fuelBalance={fuelBalance}
+          advanceMoney={advanceTotal}
+          onEdit={() => navigation.navigate('AddEditDriver', { driverId })}
+        />
+        <View style={styles.actionsRow}>
+          <View style={styles.actionButton}>
+            <PrimaryButton
+              label="Add advance"
+              onPress={() =>
+                navigation.navigate('AddDriverAdvance', { driverId })
+              }
+              variant="secondary"
             />
-            <View style={styles.actionsRow}>
-              <View style={styles.actionButton}>
-                <PrimaryButton
-                  label="Delete driver"
-                  onPress={handleDelete}
-                  variant="danger"
-                  isLoading={isDeleting}
-                />
-              </View>
-            </View>
-
-            <View style={styles.sectionTitleRow}>
-              <Text style={styles.sectionTitle}>Monthly history</Text>
-              <Text style={styles.monthlyTotal}>
-                {formatCurrency(totalMonthlyPay)}
-              </Text>
-            </View>
           </View>
-        }
-        ListEmptyComponent={
+        </View>
+        <View style={styles.actionsRow}>
+          <View style={styles.actionButton}>
+            <PrimaryButton
+              label="Delete driver"
+              onPress={handleDelete}
+              variant="danger"
+              isLoading={isDeleting}
+            />
+          </View>
+        </View>
+
+        <View style={styles.sectionTitleRow}>
+          <Text style={styles.sectionTitle}>Monthly history</Text>
+          <Text style={styles.monthlyTotal}>
+            {formatCurrency(totalMonthlyPay)}
+          </Text>
+        </View>
+
+        {historyRows.length === 0 ? (
           <EmptyState
             title="No entries this month"
             message="No daily entries recorded for this driver in the selected month."
           />
-        }
-        renderItem={({ item }) => <DriverHistoryRow entry={item} />}
-      />
+        ) : (
+          <View style={styles.cardContainer}>
+            {historyRows.map((row, index) =>
+              row.kind === 'entry' ? (
+                <DriverHistoryRow
+                  key={`entry_${row.entry.id}`}
+                  entry={row.entry}
+                  advanceAmount={row.advanceAmount}
+                  isLast={index === historyRows.length - 1}
+                />
+              ) : (
+                <DriverAdvanceRow
+                  key={`advance_${row.advance.id}`}
+                  advance={row.advance}
+                  isLast={index === historyRows.length - 1}
+                />
+              ),
+            )}
+          </View>
+        )}
+      </ScrollView>
 
       <View style={styles.footer}>
         {exportErrorMessage !== null ? (
@@ -315,6 +362,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography.subheading,
     color: colors.textPrimary,
+  },
+  cardContainer: {
+    backgroundColor: 'white',
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 2.54,
+    elevation: 3,
+    borderRadius: 8,
   },
   monthlyTotal: {
     ...typography.body,

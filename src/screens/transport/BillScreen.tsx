@@ -204,7 +204,7 @@ export function BillScreen() {
         />
 
         <Text style={styles.sectionTitle}>This month</Text>
-        <View style={styles.table}>
+        <View style={styles.cardContainer}>
           <View style={styles.tableHeaderRow}>
             <Text style={[styles.tableCell, styles.tableHeaderText]}>
               Particulars
@@ -235,7 +235,7 @@ export function BillScreen() {
               </Text>
             </View>
           ))}
-          <View style={styles.tableRow}>
+          <View style={[styles.tableRow, styles.tableRowLast]}>
             <Text style={[styles.tableCell, styles.totalLabel]}>
               Total amount
             </Text>
@@ -286,15 +286,22 @@ const styles = StyleSheet.create({
     color: colors.danger,
     marginBottom: spacing.sm,
   },
-  table: {
-    borderWidth: 1,
-    borderColor: colors.border,
+  cardContainer: {
+    backgroundColor: 'white',
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 2.54,
+    elevation: 3,
     borderRadius: 8,
     overflow: 'hidden',
   },
   tableHeaderRow: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -302,6 +309,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  tableRowLast: {
+    borderBottomWidth: 0,
   },
   tableCell: {
     flex: 1,

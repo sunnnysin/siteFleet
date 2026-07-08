@@ -1,4 +1,9 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import { colors } from '@/theme/colors';
 import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -21,10 +26,11 @@ export function PrimaryButton({
   const isInteractionBlocked = isLoading || isDisabled;
 
   return (
-    <Pressable
+    <TouchableOpacity
       accessibilityRole="button"
       onPress={onPress}
       disabled={isInteractionBlocked}
+      activeOpacity={0.7}
       style={[
         styles.button,
         variant === 'danger'
@@ -49,7 +55,7 @@ export function PrimaryButton({
           {label}
         </Text>
       )}
-    </Pressable>
+    </TouchableOpacity>
   );
 }
 

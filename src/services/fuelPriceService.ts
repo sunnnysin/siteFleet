@@ -50,6 +50,6 @@ export async function fetchFuelPricesForMonth(
     ],
   );
   return [...prices].sort((first, second) =>
-    second.date.localeCompare(first.date),
+    first.date.localeCompare(second.date),
   );
 }
