@@ -19,7 +19,7 @@ import {
 import { shareSummaryReport } from '@/services/summaryReportService';
 import {
   currentMonthKey,
-  formatDisplayDateWithWeekday,
+  formatDisplayDateWithWeekdayNoYear,
 } from '@/utils/dateUtils';
 import { VEHICLE_TYPES } from '@/types/driver';
 import { colors } from '@/theme/colors';
@@ -147,7 +147,7 @@ export function SummaryScreen() {
             {dailyCounts.map(item => (
               <View key={item.date} style={styles.tableRow}>
                 <Text style={[styles.tableCell, styles.dateCell]}>
-                  {formatDisplayDateWithWeekday(item.date)}
+                  {formatDisplayDateWithWeekdayNoYear(item.date)}
                 </Text>
                 {VEHICLE_TYPES.map(type => (
                   <Text key={type} style={[styles.tableCell, styles.center]}>

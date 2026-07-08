@@ -24,4 +24,6 @@ export type TransportStackParamList = {
   MonthlyPayment: undefined;
   Summary: undefined;
   Bill: undefined;
+  GoraulSummary: undefined;
+  GoraulBill: undefined;
 };

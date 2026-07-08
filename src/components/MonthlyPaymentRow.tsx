@@ -56,6 +56,7 @@ export function MonthlyPaymentRow({
               label="Pay via UPI"
               onPress={onPay}
               isLoading={isProcessing}
+              size="small"
             />
           </View>
           <View style={styles.actionButton}>
@@ -64,6 +65,7 @@ export function MonthlyPaymentRow({
               onPress={onMarkPaid}
               variant="secondary"
               isLoading={isProcessing}
+              size="small"
             />
           </View>
         </View>

@@ -61,5 +61,15 @@ service cloud.firestore {
       allow read: if isOwnerRead();
       allow write: if isOwnerWrite();
     }
+
+    match /goraulSummaries/{goraulSummaryId} {
+      allow read: if isOwnerRead();
+      allow write: if isOwnerWrite();
+    }
+
+    match /goraulVehicleRates/{goraulVehicleRateId} {
+      allow read: if isOwnerRead();
+      allow write: if isOwnerWrite();
+    }
   }
 }
