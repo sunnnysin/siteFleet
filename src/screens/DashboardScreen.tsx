@@ -16,10 +16,7 @@ import { fetchDailyEntriesForDate } from '@/services/dailyEntryService';
 import { fetchFuelPriceForDate } from '@/services/fuelPriceService';
 import { computeMonthlyPayments } from '@/services/paymentService';
 import { currentMonthKey, todayKey } from '@/utils/dateUtils';
-import {
-  formatCurrency,
-  formatCurrencyTrimmed,
-} from '@/utils/currencyUtils';
+import { formatCurrency, formatCurrencyTrimmed } from '@/utils/currencyUtils';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -151,6 +148,14 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
           <NavigationTile
             label="Bill"
             onPress={() => navigation.navigate('Bill')}
+          />
+          <NavigationTile
+            label="Goraul Summary"
+            onPress={() => navigation.navigate('GoraulSummary')}
+          />
+          <NavigationTile
+            label="Goraul Bill"
+            onPress={() => navigation.navigate('GoraulBill')}
             isLast
           />
         </View>

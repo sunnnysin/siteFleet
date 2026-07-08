@@ -13,6 +13,8 @@ import { AddEditDailyEntryScreen } from '@/screens/transport/AddEditDailyEntrySc
 import { MonthlyPaymentScreen } from '@/screens/transport/MonthlyPaymentScreen';
 import { SummaryScreen } from '@/screens/transport/SummaryScreen';
 import { BillScreen } from '@/screens/transport/BillScreen';
+import { GoraulSummaryScreen } from '@/screens/transport/GoraulSummaryScreen';
+import { GoraulBillScreen } from '@/screens/transport/GoraulBillScreen';
 import type { TransportStackParamList } from '@/navigation/types';
 
 const Stack = createNativeStackNavigator<TransportStackParamList>();
@@ -89,6 +91,16 @@ export function TransportStackNavigator() {
         name="Bill"
         component={BillScreen}
         options={{ title: 'Bill' }}
+      />
+      <Stack.Screen
+        name="GoraulSummary"
+        component={GoraulSummaryScreen}
+        options={{ title: 'Goraul Summary' }}
+      />
+      <Stack.Screen
+        name="GoraulBill"
+        component={GoraulBillScreen}
+        options={{ title: 'Goraul Bill' }}
       />
     </Stack.Navigator>
   );

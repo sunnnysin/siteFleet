@@ -8,4 +8,6 @@ export const FIRESTORE_COLLECTIONS = {
   pumpEntries: 'pumpEntries',
   vehicleRates: 'vehicleRates',
   driverAdvances: 'driverAdvances',
+  goraulSummaries: 'goraulSummaries',
+  goraulVehicleRates: 'goraulVehicleRates',
 } as const;

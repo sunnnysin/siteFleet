@@ -3,7 +3,7 @@ import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { formatCurrency } from '@/utils/currencyUtils';
-import { formatDisplayDateWithWeekday } from '@/utils/dateUtils';
+import { formatDisplayDateWithWeekdayNoYear } from '@/utils/dateUtils';
 import type { DailyEntry } from '@/types/dailyEntry';
 
 interface DriverHistoryRowProps {
@@ -21,7 +21,7 @@ export function DriverHistoryRow({
     <View style={[styles.row, isLast && styles.rowLast]}>
       <View style={styles.dateColumn}>
         <Text style={styles.date}>
-          {formatDisplayDateWithWeekday(entry.date)}
+          {formatDisplayDateWithWeekdayNoYear(entry.date)}
         </Text>
         <Text style={styles.route}>{entry.route}</Text>
       </View>
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     flex: 1.4,
   },
   date: {
-    ...typography.body,
+    ...typography.caption,
     color: colors.textPrimary,
     fontWeight: '600',
   },

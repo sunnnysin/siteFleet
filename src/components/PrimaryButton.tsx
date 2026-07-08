@@ -14,6 +14,7 @@ interface PrimaryButtonProps {
   isLoading?: boolean;
   isDisabled?: boolean;
   variant?: 'filled' | 'secondary' | 'danger';
+  size?: 'default' | 'small';
 }
 
 export function PrimaryButton({
@@ -22,6 +23,7 @@ export function PrimaryButton({
   isLoading = false,
   isDisabled = false,
   variant = 'filled',
+  size = 'default',
 }: PrimaryButtonProps) {
   const isInteractionBlocked = isLoading || isDisabled;
 
@@ -38,6 +40,7 @@ export function PrimaryButton({
           : variant === 'secondary'
           ? styles.secondaryButton
           : styles.filledButton,
+        size === 'small' ? styles.smallButton : null,
         isInteractionBlocked ? styles.disabledButton : null,
       ]}
     >
@@ -50,6 +53,7 @@ export function PrimaryButton({
           style={[
             styles.label,
             variant === 'secondary' ? styles.secondaryLabel : null,
+            size === 'small' ? styles.smallLabel : null,
           ]}
         >
           {label}
@@ -78,6 +82,9 @@ const styles = StyleSheet.create({
   dangerButton: {
     backgroundColor: colors.danger,
   },
+  smallButton: {
+    paddingVertical: spacing.sm,
+  },
   disabledButton: {
     backgroundColor: colors.disabled,
   },
@@ -87,5 +94,9 @@ const styles = StyleSheet.create({
   },
   secondaryLabel: {
     color: colors.textPrimary,
+  },
+  smallLabel: {
+    ...typography.body,
+    fontWeight: '600',
   },
 });

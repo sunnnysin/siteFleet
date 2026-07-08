@@ -34,3 +34,7 @@ export function formatDisplayDate(dateKey: string): string {
 export function formatDisplayDateWithWeekday(dateKey: string): string {
   return format(parseDateKey(dateKey), 'dd MMM yyyy (EEE)');
 }
+
+export function formatDisplayDateWithWeekdayNoYear(dateKey: string): string {
+  return format(parseDateKey(dateKey), 'dd MMM (EEE)');
+}
