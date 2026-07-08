@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { colors } from '@/theme/colors';
@@ -14,6 +15,7 @@ import { typography } from '@/theme/typography';
 export interface SelectOption {
   label: string;
   value: string;
+  badge?: string;
 }
 
 interface SelectFieldProps {
@@ -40,18 +42,24 @@ export function SelectField({
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <Pressable
+      <TouchableOpacity
         style={[styles.field, hasError ? styles.fieldError : null]}
         onPress={() => setIsOpen(true)}
+        activeOpacity={0.7}
       >
-        <Text
-          style={
-            selectedOption === undefined ? styles.placeholder : styles.value
-          }
-        >
-          {selectedOption?.label ?? placeholder}
-        </Text>
-      </Pressable>
+        <View style={styles.fieldContent}>
+          <Text
+            style={
+              selectedOption === undefined ? styles.placeholder : styles.value
+            }
+          >
+            {selectedOption?.label ?? placeholder}
+          </Text>
+          {selectedOption?.badge !== undefined ? (
+            <Text style={styles.badge}>{selectedOption.badge}</Text>
+          ) : null}
+        </View>
+      </TouchableOpacity>
       {hasError ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
       {isOpen ? (
@@ -63,15 +71,21 @@ export function SelectField({
                 data={options}
                 keyExtractor={option => option.value}
                 renderItem={({ item }) => (
-                  <Pressable
+                  <TouchableOpacity
                     style={styles.option}
                     onPress={() => {
                       onChange(item.value);
                       setIsOpen(false);
                     }}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.optionLabel}>{item.label}</Text>
-                  </Pressable>
+                    <View style={styles.optionContent}>
+                      <Text style={styles.optionLabel}>{item.label}</Text>
+                      {item.badge !== undefined ? (
+                        <Text style={styles.badge}>{item.badge}</Text>
+                      ) : null}
+                    </View>
+                  </TouchableOpacity>
                 )}
               />
             </Pressable>
@@ -139,8 +153,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  optionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   optionLabel: {
     ...typography.body,
     color: colors.textPrimary,
+  },
+  fieldContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  badge: {
+    ...typography.caption,
+    marginLeft: 80,
+    color: colors.surface,
+    backgroundColor: colors.danger,
+    fontWeight: '600',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs / 2,
+    borderRadius: radii.pill,
+    overflow: 'hidden',
   },
 });

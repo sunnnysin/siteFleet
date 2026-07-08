@@ -1,13 +1,15 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { addDays, subDays } from 'date-fns';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import {
   formatDateKey,
-  formatDisplayDate,
+  formatDisplayDateWithWeekday,
   parseDateKey,
 } from '@/utils/dateUtils';
+import { DatePickerModal } from '@/components/DatePickerModal';
 
 interface DateNavigatorProps {
   selectedDate: string;
@@ -16,22 +18,42 @@ interface DateNavigatorProps {
 
 export function DateNavigator({ selectedDate, onChange }: DateNavigatorProps) {
   const parsedDate = parseDateKey(selectedDate);
+  const [isPickerVisible, setIsPickerVisible] = useState(false);
 
   return (
     <View style={styles.container}>
-      <Pressable
+      <TouchableOpacity
         style={styles.arrowButton}
         onPress={() => onChange(formatDateKey(subDays(parsedDate, 1)))}
+        activeOpacity={0.7}
       >
         <Text style={styles.arrow}>‹</Text>
-      </Pressable>
-      <Text style={styles.dateLabel}>{formatDisplayDate(selectedDate)}</Text>
-      <Pressable
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => setIsPickerVisible(true)}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.dateLabel}>
+          {formatDisplayDateWithWeekday(selectedDate)}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
         style={styles.arrowButton}
         onPress={() => onChange(formatDateKey(addDays(parsedDate, 1)))}
+        activeOpacity={0.7}
       >
         <Text style={styles.arrow}>›</Text>
-      </Pressable>
+      </TouchableOpacity>
+
+      <DatePickerModal
+        visible={isPickerVisible}
+        selectedDate={selectedDate}
+        onSelect={date => {
+          onChange(date);
+          setIsPickerVisible(false);
+        }}
+        onClose={() => setIsPickerVisible(false)}
+      />
     </View>
   );
 }

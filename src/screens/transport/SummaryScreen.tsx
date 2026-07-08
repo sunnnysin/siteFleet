@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -17,7 +17,10 @@ import {
   type DailyVehicleTypeCounts,
 } from '@/services/vehicleSummaryService';
 import { shareSummaryReport } from '@/services/summaryReportService';
-import { currentMonthKey, formatDisplayDate } from '@/utils/dateUtils';
+import {
+  currentMonthKey,
+  formatDisplayDateWithWeekday,
+} from '@/utils/dateUtils';
 import { VEHICLE_TYPES } from '@/types/driver';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -105,18 +108,21 @@ export function SummaryScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={[]}>
-      <FlatList
-        data={dailyCounts}
-        keyExtractor={item => item.date}
-        contentContainerStyle={styles.list}
-        ListHeaderComponent={
-          <View>
-            <View style={styles.monthNavigator}>
-              <MonthNavigator
-                selectedMonth={selectedMonth}
-                onChange={setSelectedMonth}
-              />
-            </View>
+      <ScrollView contentContainerStyle={styles.list}>
+        <View style={styles.monthNavigator}>
+          <MonthNavigator
+            selectedMonth={selectedMonth}
+            onChange={setSelectedMonth}
+          />
+        </View>
+
+        {dailyCounts.length === 0 ? (
+          <EmptyState
+            title="No entries this month"
+            message="Daily entries for this month will appear here, grouped by vehicle type."
+          />
+        ) : (
+          <View style={styles.cardContainer}>
             <View style={styles.tableHeaderRow}>
               <Text
                 style={[styles.tableCell, styles.dateCell, styles.headerText]}
@@ -137,31 +143,25 @@ export function SummaryScreen() {
                 Total
               </Text>
             </View>
-          </View>
-        }
-        ListEmptyComponent={
-          <EmptyState
-            title="No entries this month"
-            message="Daily entries for this month will appear here, grouped by vehicle type."
-          />
-        }
-        renderItem={({ item }) => (
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, styles.dateCell]}>
-              {formatDisplayDate(item.date)}
-            </Text>
-            {VEHICLE_TYPES.map(type => (
-              <Text key={type} style={[styles.tableCell, styles.center]}>
-                {item.counts[type]}
-              </Text>
+
+            {dailyCounts.map(item => (
+              <View key={item.date} style={styles.tableRow}>
+                <Text style={[styles.tableCell, styles.dateCell]}>
+                  {formatDisplayDateWithWeekday(item.date)}
+                </Text>
+                {VEHICLE_TYPES.map(type => (
+                  <Text key={type} style={[styles.tableCell, styles.center]}>
+                    {item.counts[type]}
+                  </Text>
+                ))}
+                <Text
+                  style={[styles.tableCell, styles.center, styles.totalText]}
+                >
+                  {item.total}
+                </Text>
+              </View>
             ))}
-            <Text style={[styles.tableCell, styles.center, styles.totalText]}>
-              {item.total}
-            </Text>
-          </View>
-        )}
-        ListFooterComponent={
-          dailyCounts.length > 0 ? (
+
             <View style={styles.tableFooterRow}>
               <Text
                 style={[styles.tableCell, styles.dateCell, styles.totalText]}
@@ -180,9 +180,9 @@ export function SummaryScreen() {
                 {grandTotal}
               </Text>
             </View>
-          ) : null
-        }
-      />
+          </View>
+        )}
+      </ScrollView>
 
       <View style={styles.footer}>
         {exportErrorMessage !== null ? (
@@ -213,14 +213,25 @@ const styles = StyleSheet.create({
   monthNavigator: {
     marginHorizontal: -spacing.lg,
   },
+  cardContainer: {
+    marginTop: spacing.md,
+    backgroundColor: 'white',
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 2.54,
+    elevation: 3,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
   tableHeaderRow: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    marginTop: spacing.md,
   },
   tableRow: {
     flexDirection: 'row',

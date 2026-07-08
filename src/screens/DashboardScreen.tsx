@@ -16,7 +16,10 @@ import { fetchDailyEntriesForDate } from '@/services/dailyEntryService';
 import { fetchFuelPriceForDate } from '@/services/fuelPriceService';
 import { computeMonthlyPayments } from '@/services/paymentService';
 import { currentMonthKey, todayKey } from '@/utils/dateUtils';
-import { formatCurrency } from '@/utils/currencyUtils';
+import {
+  formatCurrency,
+  formatCurrencyTrimmed,
+} from '@/utils/currencyUtils';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -110,7 +113,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
             />
             <SummaryCard
               label="Unpaid outstanding"
-              value={formatCurrency(summary?.totalUnpaidAmount ?? 0)}
+              value={formatCurrencyTrimmed(summary?.totalUnpaidAmount ?? 0)}
             />
           </View>
         )}
@@ -148,6 +151,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
           <NavigationTile
             label="Bill"
             onPress={() => navigation.navigate('Bill')}
+            isLast
           />
         </View>
       </ScrollView>
@@ -177,6 +181,16 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   navigationList: {
-    gap: spacing.sm,
+    backgroundColor: 'white',
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 2.54,
+    elevation: 3,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
 });

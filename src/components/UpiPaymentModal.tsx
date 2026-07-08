@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { FormTextInput } from '@/components/FormTextInput';
@@ -99,24 +100,29 @@ export function UpiPaymentModal({
                 ) : (
                   <View>
                     {appOptions.map(option => (
-                      <Pressable
+                      <TouchableOpacity
                         key={option.app.id}
                         style={styles.optionRow}
                         onPress={() => onSelectApp(option)}
+                        activeOpacity={0.7}
                       >
                         <Text style={styles.optionLabel}>
                           {option.app.label}
                         </Text>
-                      </Pressable>
+                      </TouchableOpacity>
                     ))}
                   </View>
                 )}
               </>
             )}
 
-            <Pressable style={styles.cancelButton} onPress={onClose}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={onClose}
+              activeOpacity={0.7}
+            >
               <Text style={styles.cancelLabel}>Cancel</Text>
-            </Pressable>
+            </TouchableOpacity>
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>

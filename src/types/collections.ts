@@ -7,4 +7,5 @@ export const FIRESTORE_COLLECTIONS = {
   monthlyPayments: 'monthlyPayments',
   pumpEntries: 'pumpEntries',
   vehicleRates: 'vehicleRates',
+  driverAdvances: 'driverAdvances',
 } as const;

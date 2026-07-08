@@ -30,3 +30,7 @@ export function currentMonthKey(): string {
 export function formatDisplayDate(dateKey: string): string {
   return format(parseDateKey(dateKey), 'dd MMM yyyy');
 }
+
+export function formatDisplayDateWithWeekday(dateKey: string): string {
+  return format(parseDateKey(dateKey), 'dd MMM yyyy (EEE)');
+}

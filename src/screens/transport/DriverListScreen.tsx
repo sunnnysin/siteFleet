@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,11 +17,12 @@ import { fetchDrivers, setDriverActiveStatus } from '@/services/driverService';
 import { fetchRoutes } from '@/services/routeService';
 import {
   computeDriverFuelBalance,
-  fetchAllDailyEntriesForDriver,
+  fetchDailyEntriesForDriverAndMonth,
 } from '@/services/dailyEntryService';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
+import { currentMonthKey } from '@/utils/dateUtils';
 import type { TransportStackParamList } from '@/navigation/types';
 import type { Driver, DriverType } from '@/types/driver';
 import type { Route } from '@/types/route';
@@ -59,9 +60,13 @@ export function DriverListScreen({ navigation }: DriverListScreenProps) {
       setDrivers(fetchedDrivers);
       setRoutes(fetchedRoutes);
 
+      const monthKey = currentMonthKey();
       const fuelBalanceEntries = await Promise.all(
         fetchedDrivers.map(async driver => {
-          const entries = await fetchAllDailyEntriesForDriver(driver.id);
+          const entries = await fetchDailyEntriesForDriverAndMonth(
+            driver.id,
+            monthKey,
+          );
           return [driver.id, computeDriverFuelBalance(entries)] as const;
         }),
       );
@@ -162,12 +167,13 @@ export function DriverListScreen({ navigation }: DriverListScreenProps) {
         />
       )}
 
-      <Pressable
+      <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('AddEditDriver', {})}
+        activeOpacity={0.7}
       >
         <Text style={styles.fabLabel}>+</Text>
-      </Pressable>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

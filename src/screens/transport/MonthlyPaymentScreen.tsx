@@ -7,10 +7,15 @@ import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
 import { MonthlyPaymentRow } from '@/components/MonthlyPaymentRow';
 import { UpiPaymentModal } from '@/components/UpiPaymentModal';
-import { fetchDriverById, updateDriver } from '@/services/driverService';
+import {
+  fetchDriverById,
+  fetchDrivers,
+  updateDriver,
+} from '@/services/driverService';
 import {
   computeMonthlyPayments,
   markMonthlyPaymentPaid,
+  markMonthlyPaymentUnpaid,
 } from '@/services/paymentService';
 import {
   fetchAvailableUpiApps,
@@ -22,7 +27,7 @@ import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { MONTH_FORMAT } from '@/utils/dateUtils';
 import type { TransportStackParamList } from '@/navigation/types';
-import type { Driver } from '@/types/driver';
+import type { Driver, DriverType } from '@/types/driver';
 import type { MonthlyPayment } from '@/types/payment';
 
 const UPI_ID_PATTERN = /^[\w.-]+@[a-zA-Z]+$/;
@@ -41,6 +46,9 @@ export function MonthlyPaymentScreen({
   const setSelectedMonth = useTransportStore(state => state.setSelectedMonth);
 
   const [payments, setPayments] = useState<MonthlyPayment[]>([]);
+  const [driverTypeByDriverId, setDriverTypeByDriverId] = useState<
+    Map<string, DriverType>
+  >(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [processingPaymentId, setProcessingPaymentId] = useState<string | null>(
@@ -66,8 +74,14 @@ export function MonthlyPaymentScreen({
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const monthlyPayments = await computeMonthlyPayments(selectedMonth);
+      const [monthlyPayments, drivers] = await Promise.all([
+        computeMonthlyPayments(selectedMonth),
+        fetchDrivers(),
+      ]);
       setPayments(monthlyPayments);
+      setDriverTypeByDriverId(
+        new Map(drivers.map(driver => [driver.id, driver.driverType])),
+      );
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to load payments.',
@@ -207,6 +221,27 @@ export function MonthlyPaymentScreen({
     }
   }
 
+  async function handleMarkUnpaid(payment: MonthlyPayment): Promise<void> {
+    setProcessingPaymentId(payment.id);
+    setErrorMessage(null);
+    try {
+      const unpaidPayment = await markMonthlyPaymentUnpaid(payment);
+      setPayments(previous =>
+        previous.map(existing =>
+          existing.id === unpaidPayment.id ? unpaidPayment : existing,
+        ),
+      );
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Failed to mark payment as unpaid.',
+      );
+    } finally {
+      setProcessingPaymentId(null);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <MonthNavigator
@@ -239,6 +274,7 @@ export function MonthlyPaymentScreen({
           renderItem={({ item }) => (
             <MonthlyPaymentRow
               payment={item}
+              driverType={driverTypeByDriverId.get(item.driverId) ?? null}
               onPress={() =>
                 navigation.navigate('DriverDetail', {
                   driverId: item.driverId,
@@ -246,6 +282,7 @@ export function MonthlyPaymentScreen({
               }
               onPay={() => void handlePay(item)}
               onMarkPaid={() => void handleMarkPaid(item)}
+              onMarkUnpaid={() => void handleMarkUnpaid(item)}
               isProcessing={processingPaymentId === item.id}
             />
           )}

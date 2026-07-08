@@ -1,15 +1,16 @@
 import {
   ActivityIndicator,
   Image,
-  Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { colors } from '@/theme/colors';
 import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import deleteIcon from '@/assets/delete.png';
+import { formatRouteDescription } from '@/utils/textUtils';
 import type { Route } from '@/types/route';
 
 interface RouteListItemProps {
@@ -26,16 +27,23 @@ export function RouteListItem({
   isDeleting,
 }: RouteListItemProps) {
   return (
-    <Pressable style={styles.row} onPress={onPress}>
+    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.details}>
         <Text style={styles.name}>{route.name}</Text>
         <View style={styles.metaRow}>
-          <Text style={styles.metaInline}>{route.description}</Text>
+          <Text style={styles.metaInline}>
+            {formatRouteDescription(route.description)}
+          </Text>
           <Text style={styles.separatorDot}>●</Text>
           <Text style={styles.metaInline}>{route.fuelLitres ?? 0} L</Text>
         </View>
       </View>
-      <Pressable onPress={onDelete} disabled={isDeleting} hitSlop={8}>
+      <TouchableOpacity
+        onPress={onDelete}
+        disabled={isDeleting}
+        hitSlop={8}
+        activeOpacity={0.7}
+      >
         {isDeleting ? (
           <ActivityIndicator size="small" color={colors.danger} />
         ) : (
@@ -45,8 +53,8 @@ export function RouteListItem({
             resizeMode="contain"
           />
         )}
-      </Pressable>
-    </Pressable>
+      </TouchableOpacity>
+    </TouchableOpacity>
   );
 }
 

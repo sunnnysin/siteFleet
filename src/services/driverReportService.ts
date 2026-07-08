@@ -33,8 +33,8 @@ function buildReportHtml(
   routeLabel: string,
   monthLabel: string,
   entries: DailyEntry[],
-  carriedForwardFuel: number,
   fuelBalance: number,
+  advanceTotal: number,
   monthlyPaymentStatus: PaymentStatus | null,
 ): string {
   const daysPresent = entries.filter(
@@ -44,6 +44,7 @@ function buildReportHtml(
     (sum, entry) => sum + computeDriverPayForReport(entry, driver),
     0,
   );
+  const netAmountDue = totalDriverPay - advanceTotal;
   const totalUnpaid = entries
     .filter(
       entry =>
@@ -140,14 +141,17 @@ function buildReportHtml(
           <div><strong>Total driver pay:</strong> ${formatCurrency(
             totalDriverPay,
           )}</div>
+          <div><strong>Advance taken this month:</strong> ${formatCurrency(
+            advanceTotal,
+          )}</div>
+          <div><strong>Net amount due:</strong> ${formatCurrency(
+            netAmountDue,
+          )}</div>
           <div><strong>Unpaid amount:</strong> ${formatCurrency(
             totalUnpaid,
           )}</div>
           <div><strong>Total fuel taken this month:</strong> ${totalFuelTaken} L</div>
-          <div><strong>Carried forward fuel:</strong> ${formatFuelAmount(
-            carriedForwardFuel,
-          )}</div>
-          <div><strong>Fuel balance (end of month):</strong> ${formatFuelAmount(
+          <div><strong>Fuel balance (this month):</strong> ${formatFuelAmount(
             fuelBalance,
           )}</div>
         </div>
@@ -161,8 +165,8 @@ export async function shareDriverMonthlyReport(
   routeLabel: string,
   monthLabel: string,
   entries: DailyEntry[],
-  carriedForwardFuel: number,
   fuelBalance: number,
+  advanceTotal: number,
   monthlyPaymentStatus: PaymentStatus | null,
 ): Promise<void> {
   const html = buildReportHtml(
@@ -170,8 +174,8 @@ export async function shareDriverMonthlyReport(
     routeLabel,
     monthLabel,
     entries,
-    carriedForwardFuel,
     fuelBalance,
+    advanceTotal,
     monthlyPaymentStatus,
   );
   const fileName = `${driver.name.replace(/\s+/g, '_')}_${monthLabel.replace(

@@ -20,11 +20,17 @@ export function SummaryCard({ label, value }: SummaryCardProps) {
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: 'white',
     borderRadius: radii.md,
     padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 2.54,
+    elevation: 3,
   },
   value: {
     ...typography.subheading,

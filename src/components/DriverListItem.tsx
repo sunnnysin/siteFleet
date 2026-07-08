@@ -1,9 +1,9 @@
 import {
   Image,
   Linking,
-  Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { colors } from '@/theme/colors';
@@ -32,10 +32,11 @@ export function DriverListItem({
   }
 
   return (
-    <Pressable
+    <TouchableOpacity
       style={styles.row}
       onPress={onPress}
       onLongPress={onToggleActive}
+      activeOpacity={0.7}
     >
       <View style={styles.details}>
         <Text style={styles.name}>{driver.name}</Text>
@@ -53,14 +54,14 @@ export function DriverListItem({
           ) : null}
         </View>
       </View>
-      <Pressable onPress={handleCall} hitSlop={8}>
+      <TouchableOpacity onPress={handleCall} hitSlop={8} activeOpacity={0.7}>
         <Image
           source={phoneIcon}
           style={styles.callIcon}
           resizeMode="contain"
         />
-      </Pressable>
-    </Pressable>
+      </TouchableOpacity>
+    </TouchableOpacity>
   );
 }
 

@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@/theme/colors';
 import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -9,8 +9,8 @@ interface DriverDetailCardProps {
   driver: Driver;
   routeLabel: string;
   monthlyFuelTaken: number;
-  carriedForwardFuel: number;
   fuelBalance: number;
+  advanceMoney: number;
   onEdit: () => void;
 }
 
@@ -38,8 +38,8 @@ export function DriverDetailCard({
   driver,
   routeLabel,
   monthlyFuelTaken,
-  carriedForwardFuel,
   fuelBalance,
+  advanceMoney,
   onEdit,
 }: DriverDetailCardProps) {
   return (
@@ -76,19 +76,23 @@ export function DriverDetailCard({
         value={formatCurrency(driver.dailyRate)}
       />
       <DetailRow
-        label="Carried forward"
-        value={formatFuelAmount(carriedForwardFuel)}
-      />
-      <DetailRow
         label="Fuel taken this month"
         value={`${monthlyFuelTaken} L`}
       />
       <DetailRow label="Fuel balance" value={formatFuelAmount(fuelBalance)} />
+      <DetailRow
+        label="Advance Money"
+        value={formatCurrency(advanceMoney)}
+      />
 
       <View style={styles.footer}>
-        <Pressable style={styles.editButton} onPress={onEdit}>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={onEdit}
+          activeOpacity={0.7}
+        >
           <Text style={styles.editLabel}>Edit</Text>
-        </Pressable>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -96,11 +100,17 @@ export function DriverDetailCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: 'white',
     borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 2.54,
+    elevation: 3,
   },
   header: {
     flexDirection: 'row',

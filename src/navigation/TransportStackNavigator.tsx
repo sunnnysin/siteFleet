@@ -3,6 +3,7 @@ import { DashboardScreen } from '@/screens/DashboardScreen';
 import { DriverListScreen } from '@/screens/transport/DriverListScreen';
 import { DriverDetailScreen } from '@/screens/transport/DriverDetailScreen';
 import { AddEditDriverScreen } from '@/screens/transport/AddEditDriverScreen';
+import { AddDriverAdvanceScreen } from '@/screens/transport/AddDriverAdvanceScreen';
 import { RouteListScreen } from '@/screens/transport/RouteListScreen';
 import { AddEditRouteScreen } from '@/screens/transport/AddEditRouteScreen';
 import { FuelPriceScreen } from '@/screens/transport/FuelPriceScreen';
@@ -38,6 +39,11 @@ export function TransportStackNavigator() {
         name="AddEditDriver"
         component={AddEditDriverScreen}
         options={{ title: 'Driver' }}
+      />
+      <Stack.Screen
+        name="AddDriverAdvance"
+        component={AddDriverAdvanceScreen}
+        options={{ title: 'Add Advance' }}
       />
       <Stack.Screen
         name="RouteList"

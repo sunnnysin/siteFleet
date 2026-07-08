@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
-  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,7 +26,7 @@ import { sharePumpMonthlyReport } from '@/services/pumpReportService';
 import { formatCurrency } from '@/utils/currencyUtils';
 import {
   currentMonthKey,
-  formatDisplayDate,
+  formatDisplayDateWithWeekday,
   MONTH_FORMAT,
   todayKey,
 } from '@/utils/dateUtils';
@@ -166,93 +166,92 @@ export function PumpScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={[]}>
-      <FlatList
-        data={monthEntries}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-        ListHeaderComponent={
-          <View>
-            <View style={styles.form}>
-              <View style={styles.dateNavigator}>
-                <DateNavigator
-                  selectedDate={selectedDate}
-                  onChange={setSelectedDate}
-                />
-              </View>
-              <FormTextInput
-                label="Fuel taken (litres)"
-                value={litresInput}
-                onChangeText={setLitresInput}
-                keyboardType="decimal-pad"
-                errorMessage={saveErrorMessage ?? undefined}
-              />
-              {driverFuelTotal > 0 ? (
-                <Text style={styles.driverFuelHint}>
-                  From daily entries: {driverFuelTotal} L (editable)
-                </Text>
-              ) : null}
-              {priceForDate !== null ? (
-                <Text style={styles.priceHint}>
-                  Price for this date:{' '}
-                  {formatCurrency(priceForDate.pricePerLitre)}
-                  /L
-                  {estimatedCost !== null
-                    ? ` · Estimated cost: ${formatCurrency(estimatedCost)}`
-                    : ''}
-                </Text>
-              ) : (
-                <Text style={styles.priceWarning}>
-                  No fuel price set for this date. Set it in Fuel Price first.
-                </Text>
-              )}
-              <PrimaryButton
-                label="Save"
-                onPress={() => void handleSave()}
-                isLoading={isSaving}
-              />
-            </View>
-
-            <Text style={styles.sectionTitle}>Month-wise history</Text>
-            <View style={styles.monthNavigator}>
-              <MonthNavigator
-                selectedMonth={selectedMonth}
-                onChange={setSelectedMonth}
-              />
-            </View>
-            <View style={styles.totalsRow}>
-              <Text style={styles.totalsLabel}>
-                Total: {totals.totalLitres} L
-              </Text>
-              <Text style={styles.totalsLabel}>
-                {formatCurrency(totals.totalCost)}
-              </Text>
-            </View>
+      <ScrollView contentContainerStyle={styles.list}>
+        <View style={styles.form}>
+          <View style={styles.dateNavigator}>
+            <DateNavigator
+              selectedDate={selectedDate}
+              onChange={setSelectedDate}
+            />
           </View>
-        }
-        ListEmptyComponent={
+          <FormTextInput
+            label="Fuel taken (litres)"
+            value={litresInput}
+            onChangeText={setLitresInput}
+            keyboardType="decimal-pad"
+            errorMessage={saveErrorMessage ?? undefined}
+          />
+          {driverFuelTotal > 0 ? (
+            <Text style={styles.driverFuelHint}>
+              From daily entries: {driverFuelTotal} L (editable)
+            </Text>
+          ) : null}
+          {priceForDate !== null ? (
+            <Text style={styles.priceHint}>
+              Price for this date: {formatCurrency(priceForDate.pricePerLitre)}
+              /L
+              {estimatedCost !== null
+                ? ` · Estimated cost: ${formatCurrency(estimatedCost)}`
+                : ''}
+            </Text>
+          ) : (
+            <Text style={styles.priceWarning}>
+              No fuel price set for this date. Set it in Fuel Price first.
+            </Text>
+          )}
+          <PrimaryButton
+            label="Save"
+            onPress={() => void handleSave()}
+            isLoading={isSaving}
+          />
+        </View>
+
+        <Text style={styles.sectionTitle}>Month-wise history</Text>
+        <View style={styles.monthNavigator}>
+          <MonthNavigator
+            selectedMonth={selectedMonth}
+            onChange={setSelectedMonth}
+          />
+        </View>
+        <View style={styles.totalsRow}>
+          <Text style={styles.totalsLabel}>Total: {totals.totalLitres} L</Text>
+          <Text style={styles.totalsLabel}>
+            {formatCurrency(totals.totalCost)}
+          </Text>
+        </View>
+
+        {monthEntries.length === 0 ? (
           <EmptyState
             title="No history yet"
             message="Pump entries you log this month will appear here."
           />
-        }
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.historyRow}
-            onPress={() => setSelectedDate(item.date)}
-          >
-            <Text style={styles.historyDate}>
-              {formatDisplayDate(item.date)}
-            </Text>
-            <Text style={styles.historyLitres}>{item.litres} L</Text>
-            <Text style={styles.historyPrice}>
-              {formatCurrency(item.pricePerLitre)}
-            </Text>
-            <Text style={styles.historyCost}>
-              {formatCurrency(item.totalCost)}
-            </Text>
-          </Pressable>
+        ) : (
+          <View style={styles.cardContainer}>
+            {monthEntries.map((item, index) => (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.historyRow,
+                  index === monthEntries.length - 1 && styles.historyRowLast,
+                ]}
+                onPress={() => setSelectedDate(item.date)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.historyDate}>
+                  {formatDisplayDateWithWeekday(item.date)}
+                </Text>
+                <Text style={styles.historyLitres}>{item.litres} L</Text>
+                <Text style={styles.historyPrice}>
+                  {formatCurrency(item.pricePerLitre)}
+                </Text>
+                <Text style={styles.historyCost}>
+                  {formatCurrency(item.totalCost)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
-      />
+      </ScrollView>
 
       <View style={styles.footer}>
         {exportErrorMessage !== null ? (
@@ -321,12 +320,28 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: spacing.lg,
   },
+  cardContainer: {
+    backgroundColor: 'white',
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 2.54,
+    elevation: 3,
+    borderRadius: 8,
+  },
   historyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  historyRowLast: {
+    borderBottomWidth: 0,
   },
   historyDate: {
     ...typography.body,

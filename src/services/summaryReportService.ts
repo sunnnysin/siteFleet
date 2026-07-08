@@ -15,7 +15,7 @@ function formatSummaryDate(dateKey: string): string {
 }
 
 function formatCount(count: number): string {
-  return count > 0 ? String(count).padStart(2, '0') : '';
+  return String(count).padStart(2, '0');
 }
 
 function buildReportHtml(
