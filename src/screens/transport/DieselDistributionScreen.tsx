@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DateNavigator } from '@/components/DateNavigator';
+import { DriverTypeBadge } from '@/components/DriverTypeBadge';
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { FormTextInput } from '@/components/FormTextInput';
@@ -35,6 +36,13 @@ interface DistributionRow {
   litres: string;
 }
 
+function formatLitresForDisplay(value: number): string {
+  if (!Number.isFinite(value) || value < 0 || !Number.isInteger(value)) {
+    return String(value);
+  }
+  return value < 10 ? String(value).padStart(2, '0') : String(value);
+}
+
 export function DieselDistributionScreen() {
   const [selectedDate, setSelectedDate] = useState(todayKey());
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -45,7 +53,7 @@ export function DieselDistributionScreen() {
     'closed' | 'selectDriver' | 'enterLitres'
   >('closed');
   const [pendingDriver, setPendingDriver] = useState<Driver | null>(null);
-  const [pendingLitres, setPendingLitres] = useState('0');
+  const [pendingLitres, setPendingLitres] = useState('');
   const [pendingLitresError, setPendingLitresError] = useState<string | null>(
     null,
   );
@@ -74,7 +82,7 @@ export function DieselDistributionScreen() {
             driverId: entry.driverId,
             driverName: entry.driverName,
             vehicleNumber: entry.vehicleNumber,
-            litres: String(entry.litres),
+            litres: formatLitresForDisplay(entry.litres),
           })),
       );
     } catch (error) {
@@ -95,13 +103,13 @@ export function DieselDistributionScreen() {
   function handleClosePicker(): void {
     setPickerStep('closed');
     setPendingDriver(null);
-    setPendingLitres('0');
+    setPendingLitres('');
     setPendingLitresError(null);
   }
 
   function handleSelectDriverForAdd(driver: Driver): void {
     setPendingDriver(driver);
-    setPendingLitres('0');
+    setPendingLitres('');
     setPendingLitresError(null);
     setPickerStep('enterLitres');
   }
@@ -110,7 +118,8 @@ export function DieselDistributionScreen() {
     if (pendingDriver === null) {
       return;
     }
-    const litres = Number(pendingLitres);
+    const litres =
+      pendingLitres.trim().length === 0 ? 0 : Number(pendingLitres);
     if (!Number.isFinite(litres) || litres < 0) {
       setPendingLitresError('Enter a valid litres amount.');
       return;
@@ -121,7 +130,7 @@ export function DieselDistributionScreen() {
         driverId: pendingDriver.id,
         driverName: pendingDriver.name,
         vehicleNumber: pendingDriver.vehicleNumber,
-        litres: pendingLitres,
+        litres: formatLitresForDisplay(litres),
       },
     ]);
     handleClosePicker();
@@ -136,6 +145,20 @@ export function DieselDistributionScreen() {
       previous.map(row =>
         row.driverId === driverId ? { ...row, litres: value } : row,
       ),
+    );
+  }
+
+  function handleBlurLitres(driverId: string): void {
+    setRows(previous =>
+      previous.map(row => {
+        if (row.driverId !== driverId) {
+          return row;
+        }
+        const litres = Number(row.litres);
+        return Number.isFinite(litres) && litres >= 0
+          ? { ...row, litres: formatLitresForDisplay(litres) }
+          : row;
+      }),
     );
   }
 
@@ -281,6 +304,7 @@ export function DieselDistributionScreen() {
                   onChangeText={value =>
                     handleChangeLitres(row.driverId, value)
                   }
+                  onBlur={() => handleBlurLitres(row.driverId)}
                   keyboardType="decimal-pad"
                 />
                 <TouchableOpacity
@@ -349,7 +373,12 @@ export function DieselDistributionScreen() {
                         onPress={() => handleSelectDriverForAdd(item)}
                         activeOpacity={0.7}
                       >
-                        <Text style={styles.optionLabel}>{item.name}</Text>
+                        <View style={styles.optionLabelRow}>
+                          <Text style={styles.optionLabel}>{item.name}</Text>
+                          {item.driverType === 'temporary' ? (
+                            <DriverTypeBadge driverType={item.driverType} />
+                          ) : null}
+                        </View>
                         <Text style={styles.optionMeta}>
                           {item.vehicleNumber}
                         </Text>
@@ -370,6 +399,7 @@ export function DieselDistributionScreen() {
                     value={pendingLitres}
                     onChangeText={setPendingLitres}
                     keyboardType="decimal-pad"
+                    placeholder="0"
                     autoFocus
                     errorMessage={pendingLitresError ?? undefined}
                   />
@@ -505,6 +535,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  optionLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   optionLabel: {
     ...typography.body,

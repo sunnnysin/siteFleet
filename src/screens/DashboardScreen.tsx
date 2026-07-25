@@ -251,12 +251,12 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
             onPress={() => navigation.navigate('Summary')}
           />
           <NavigationTile
-            label="Goraul Summary"
-            onPress={() => navigation.navigate('GoraulSummary')}
-          />
-          <NavigationTile
             label="Goraul Bill"
             onPress={() => navigation.navigate('GoraulBill')}
+          />
+          <NavigationTile
+            label="Goraul Summary"
+            onPress={() => navigation.navigate('GoraulSummary')}
             isLast
           />
         </View>
