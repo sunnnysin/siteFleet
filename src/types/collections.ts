@@ -10,4 +10,5 @@ export const FIRESTORE_COLLECTIONS = {
   driverAdvances: 'driverAdvances',
   goraulSummaries: 'goraulSummaries',
   goraulVehicleRates: 'goraulVehicleRates',
+  dieselDistributions: 'dieselDistributions',
 } as const;

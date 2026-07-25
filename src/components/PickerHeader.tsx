@@ -1,10 +1,4 @@
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -42,7 +36,11 @@ export function PickerHeader({
       >
         <Text style={styles.label}>{label}</Text>
         {onLabelPress !== undefined ? (
-          <Image source={nextIcon} style={styles.chevron} resizeMode="contain" />
+          <Image
+            source={nextIcon}
+            style={styles.chevron}
+            resizeMode="contain"
+          />
         ) : null}
       </TouchableOpacity>
       <TouchableOpacity

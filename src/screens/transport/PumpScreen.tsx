@@ -319,6 +319,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   cardContainer: {
     backgroundColor: 'white',

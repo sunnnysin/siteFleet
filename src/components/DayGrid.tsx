@@ -52,7 +52,10 @@ export function DayGrid({
         <View key={rowIndex} style={styles.row}>
           {row.map((day, columnIndex) =>
             day === null ? (
-              <View key={`blank-${rowIndex}-${columnIndex}`} style={styles.cell} />
+              <View
+                key={`blank-${rowIndex}-${columnIndex}`}
+                style={styles.cell}
+              />
             ) : (
               <TouchableOpacity
                 key={day}

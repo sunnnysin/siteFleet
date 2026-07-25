@@ -21,6 +21,7 @@ import {
   saveDailyEntry,
   type DailyEntryDriverSource,
 } from '@/services/dailyEntryService';
+import { fetchDieselDistributionForDate } from '@/services/dieselDistributionService';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { formatDisplayDateWithWeekday } from '@/utils/dateUtils';
@@ -64,6 +65,8 @@ export function AddEditDailyEntryScreen({
   const [routes, setRoutes] = useState<Route[]>([]);
   const [lockedDriver, setLockedDriver] =
     useState<DailyEntryDriverSource | null>(null);
+  const [distributedLitresByDriverId, setDistributedLitresByDriverId] =
+    useState<Map<string, number>>(new Map());
 
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(
     driverId ?? null,
@@ -79,10 +82,23 @@ export function AddEditDailyEntryScreen({
     setIsLoading(true);
     setLoadErrorMessage(null);
     try {
-      const [fetchedRoutes, fetchedDrivers, entriesForDate] = await Promise.all(
-        [fetchRoutes(), fetchDrivers(), fetchDailyEntriesForDate(date)],
-      );
+      const [
+        fetchedRoutes,
+        fetchedDrivers,
+        entriesForDate,
+        distributionEntries,
+      ] = await Promise.all([
+        fetchRoutes(),
+        fetchDrivers(),
+        fetchDailyEntriesForDate(date),
+        fetchDieselDistributionForDate(date),
+      ]);
       setRoutes(fetchedRoutes);
+      setDistributedLitresByDriverId(
+        new Map(
+          distributionEntries.map(entry => [entry.driverId, entry.litres]),
+        ),
+      );
 
       if (isEditMode) {
         const existingEntry = await fetchDailyEntry(date, driverId);
@@ -127,6 +143,10 @@ export function AddEditDailyEntryScreen({
     if (driver !== undefined) {
       setSelectedRouteId(driver.routeId.length > 0 ? driver.routeId : null);
     }
+    const distributedLitres = distributedLitresByDriverId.get(newDriverId);
+    setFuelLitres(
+      distributedLitres !== undefined ? String(distributedLitres) : '0',
+    );
   }
 
   async function handleSave(): Promise<void> {

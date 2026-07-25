@@ -25,7 +25,10 @@ export function PickerGrid({ items }: PickerGridProps) {
           activeOpacity={0.7}
         >
           <Text
-            style={[styles.cellLabel, item.selected && styles.cellLabelSelected]}
+            style={[
+              styles.cellLabel,
+              item.selected && styles.cellLabelSelected,
+            ]}
           >
             {item.label}
           </Text>

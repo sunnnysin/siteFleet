@@ -209,6 +209,7 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   monthNavigator: {
     marginHorizontal: -spacing.lg,

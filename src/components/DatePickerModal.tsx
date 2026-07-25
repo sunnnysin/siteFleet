@@ -40,9 +40,7 @@ export function DatePickerModal({
   const [browsingYear, setBrowsingYear] = useState(
     parsedSelected.getFullYear(),
   );
-  const [browsingMonth, setBrowsingMonth] = useState(
-    parsedSelected.getMonth(),
-  );
+  const [browsingMonth, setBrowsingMonth] = useState(parsedSelected.getMonth());
   const [yearPageStart, setYearPageStart] = useState(
     parsedSelected.getFullYear() - 5,
   );

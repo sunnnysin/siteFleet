@@ -80,10 +80,7 @@ export function DriverDetailCard({
         value={`${monthlyFuelTaken} L`}
       />
       <DetailRow label="Fuel balance" value={formatFuelAmount(fuelBalance)} />
-      <DetailRow
-        label="Advance Money"
-        value={formatCurrency(advanceMoney)}
-      />
+      <DetailRow label="Advance Money" value={formatCurrency(advanceMoney)} />
 
       <View style={styles.footer}>
         <TouchableOpacity
