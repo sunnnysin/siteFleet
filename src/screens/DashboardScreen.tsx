@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
@@ -52,10 +52,56 @@ interface DashboardSummary {
   totalSaving: number;
 }
 
+type MaskedCardKey =
+  | 'totalOutstanding'
+  | 'totalDriverOutstanding'
+  | 'totalFuelOutstanding'
+  | 'totalSaving';
+
+const MASK_AUTO_HIDE_MS = 5000;
+
 export function DashboardScreen({ navigation }: DashboardScreenProps) {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [visibleCards, setVisibleCards] = useState<Set<MaskedCardKey>>(
+    new Set(),
+  );
+  const hideTimers = useRef<
+    Partial<Record<MaskedCardKey, ReturnType<typeof setTimeout>>>
+  >({});
+
+  function handleToggleCardVisibility(key: MaskedCardKey): void {
+    const existingTimer = hideTimers.current[key];
+    if (existingTimer !== undefined) {
+      clearTimeout(existingTimer);
+      delete hideTimers.current[key];
+    }
+    setVisibleCards(previous => {
+      const next = new Set(previous);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+        hideTimers.current[key] = setTimeout(() => {
+          setVisibleCards(current => {
+            const updated = new Set(current);
+            updated.delete(key);
+            return updated;
+          });
+          delete hideTimers.current[key];
+        }, MASK_AUTO_HIDE_MS);
+      }
+      return next;
+    });
+  }
+
+  useEffect(() => {
+    const timers = hideTimers.current;
+    return () => {
+      Object.values(timers).forEach(timer => clearTimeout(timer));
+    };
+  }, []);
 
   const loadSummary = useCallback(async () => {
     setIsLoading(true);
@@ -179,6 +225,10 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
               <SummaryCard
                 label="Total outstanding"
                 value={formatCurrencyTrimmed(summary?.totalOutstanding ?? 0)}
+                masked={!visibleCards.has('totalOutstanding')}
+                onToggleMask={() =>
+                  handleToggleCardVisibility('totalOutstanding')
+                }
               />
             </View>
             <View style={[styles.cardRow, styles.cardRowSpacing]}>
@@ -187,16 +237,26 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
                 value={formatCurrencyTrimmed(
                   summary?.totalDriverOutstanding ?? 0,
                 )}
+                masked={!visibleCards.has('totalDriverOutstanding')}
+                onToggleMask={() =>
+                  handleToggleCardVisibility('totalDriverOutstanding')
+                }
               />
               <SummaryCard
                 label="Total fuel outstanding"
                 value={formatCurrencyTrimmed(
                   summary?.totalFuelOutstanding ?? 0,
                 )}
+                masked={!visibleCards.has('totalFuelOutstanding')}
+                onToggleMask={() =>
+                  handleToggleCardVisibility('totalFuelOutstanding')
+                }
               />
               <SummaryCard
                 label="Total saving"
                 value={formatCurrencyTrimmed(summary?.totalSaving ?? 0)}
+                masked={!visibleCards.has('totalSaving')}
+                onToggleMask={() => handleToggleCardVisibility('totalSaving')}
               />
             </View>
           </>
