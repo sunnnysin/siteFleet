@@ -71,5 +71,10 @@ service cloud.firestore {
       allow read: if isOwnerRead();
       allow write: if isOwnerWrite();
     }
+
+    match /dieselDistributions/{dieselDistributionId} {
+      allow read: if isOwnerRead();
+      allow write: if isOwnerWrite();
+    }
   }
 }

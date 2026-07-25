@@ -23,6 +23,8 @@ module.exports = {
       '<rootDir>/__mocks__/goraulSummaryReportServiceMock.ts',
     '^@/services/goraulBillReportService$':
       '<rootDir>/__mocks__/goraulBillReportServiceMock.ts',
+    '^@/services/dieselDistributionReportService$':
+      '<rootDir>/__mocks__/dieselDistributionReportServiceMock.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
   },
 };
