@@ -23,14 +23,19 @@ jobs:
 
             if (body.trim().length === 0) {
               core.setFailed(
-                'PR description is empty. Fill in the PR template (Summary, Changes, Testing done).',
+                'PR description is empty. Fill in the PR template (Context, Technical Changes, Impact Analysis, How to Test).',
               );
               return;
             }
 
-            const requiredSections = ['Summary', 'Changes', 'Testing done'];
+            const requiredSections = [
+              'Context',
+              'Technical Changes',
+              'Impact Analysis',
+              'How to Test',
+            ];
             const missingSections = requiredSections.filter(
-              section => !new RegExp(`##\\s*${section}`, 'i').test(body),
+              section => !new RegExp(`##.*${section}`, 'i').test(body),
             );
 
             if (missingSections.length > 0) {

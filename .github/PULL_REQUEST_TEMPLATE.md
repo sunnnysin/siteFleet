@@ -1,19 +1,30 @@
-## Summary
+## ℹ️ Context (The "Why")
 
-<!-- One or two sentences: what does this PR do and why. -->
+<!-- What prompted this change — the bug, the ask, the constraint — and what it fixes. -->
 
-## Changes
+## 🛠️ Technical Changes (The "What")
 
 <!-- Bulleted list of the actual changes made. -->
 
 -
 
-## Testing done
+## 🚨 Impact Analysis (Regression Risk)
 
-<!-- Commands run, screens exercised, edge cases checked. -->
+- [ ] **No Impact** (isolated change, no existing behavior affected)
+- [ ] **Global Impact**
+- [ ] **Native Module Change**
+- [ ] **API Contract**
+
+**Affected modules:**
 
 -
 
-## Screenshots (if UI-facing)
+## 🧪 How to Test (The "How")
 
-<!-- Before/after screenshots or a short recording. Delete this section if the change has no UI impact. -->
+<!-- Commands run, screens exercised, edge cases checked. -->
+
+1.
+
+## 📸 Screenshots / Videos
+
+<!-- Before/after screenshots or a short recording. Write N/A if the change has no UI impact. -->
