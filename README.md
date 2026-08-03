@@ -6,7 +6,17 @@ Internal, single-user app for managing a transport business: hiring vehicles wit
 
 Distributed as a sideloaded APK (not published to app stores). Cloud data via Firebase, tied to the admin's Google account.
 
-The full implementation spec lives at [`sitefleet-transport-module-spec.md`](../sitefleet-transport-module-spec.md) in the parent directory.
+## Screenshots
+
+| Dashboard | Drivers list | Routes list |
+|---|---|---|
+| <img src="docs/screenshots/dashboard.png" width="220" /> | <img src="docs/screenshots/drivers-list.png" width="220" /> | <img src="docs/screenshots/routes-list.png" width="220" /> |
+| Masked payment/fuel summary tiles and the sectioned Transport nav list. | Permanent/Temporary segmented list with per-driver fuel balance. | Fixed per-route fuel allotments feeding the fuel-balance ledger. |
+
+| Date picker | Bill | Vehicle summary |
+|---|---|---|
+| <img src="docs/screenshots/date-picker.png" width="220" /> | <img src="docs/screenshots/bill-screen.png" width="220" /> | <img src="docs/screenshots/vehicle-summary.png" width="220" /> |
+| Custom calendar modal shared by every date/month navigator in the app. | Editable rate-per-trip with a PDF invoice matching the business's existing paper format. | Date-wise ACE vs. Bolero/PickUp attendance counts for a month. |
 
 ## Tech stack
 
@@ -16,6 +26,20 @@ The full implementation spec lives at [`sitefleet-transport-module-spec.md`](../
 - Zustand for global state
 - React Hook Form + Zod for forms and validation
 - date-fns for date handling
+
+## Architecture & key decisions
+
+A few decisions worth calling out for anyone skimming the code:
+
+**Per-owner data isolation via Firestore rules, not a shared admin account.** This started as a single-admin app but is actually used by multiple family members, each with their own drivers, routes, and payments. Every document carries an `ownerId` (the creator's Firebase Auth UID), every query filters by it client-side, and Firestore security rules enforce the same match server-side — so isolation holds even if a client bug ever sent the wrong query. Any authenticated Google account can use the app; access control is just "did you write this document," not an allowlist of specific users.
+
+**Fuel-balance ledger: snapshot vs. actual, carried forward as credit or deficit.** Each route has a fixed diesel allotment (`routeFuelLitres`, snapshotted onto the `DailyEntry` at save time); each entry also records the driver's *actual* litres taken (`fuelLitres`), which can be more than the route needs (an advance) or less. A driver's running fuel balance is the cumulative `fuelLitres - routeFuelLitres` across all their present-day entries — positive means they're carrying a fuel credit, negative means they owe fuel back. This lets a driver fill up once and draw down the surplus across several routes and months without any separate "advance" bookkeeping.
+
+**`settlementType` is derived, never a manual toggle.** Whether a driver is paid same-day (via UPI, immediately) or bundled into month-end aggregation follows directly from their `driverType` (temporary vs. permanent) at the moment an entry is saved. An earlier version had a manual per-entry toggle; it was removed because the two concepts always moved together in practice, and a manual toggle was just an extra place for the same fact to go stale or get set wrong.
+
+**Case study — Android touch freeze after every save.** The entire app would go touch-unresponsive after any Firestore write, recoverable only by rotating the device. *Root cause*, found via live `adb`/`uiautomator` inspection on a physical device: `android:windowSoftInputMode="adjustResize"` in the manifest made Android resize the native window on every keyboard open/close, and on this device that resize left the touch-input transport geometry stale relative to what was actually on screen — only a forced full relayout (rotation, or even an `adb` screenshot call) resynced it. *Fix*: switch to `adjustPan`, a one-line manifest change, verified with a real native rebuild rather than a JS reload.
+
+**Case study — iOS modal-transition deadlock.** An earlier UPI payment flow closed one `<Modal>` and opened a second one in the same tick to move from "enter UPI ID" to "choose UPI app." On iOS this caused a genuine native UI-thread deadlock — the app froze completely and didn't recover on its own, since it wasn't a JS crash but a native modal-presentation conflict. *Fix*: collapse the flow into a single persistent `<Modal>` that switches between steps via internal state, and never close-then-immediately-open two separate modals. This became a standing rule for every later multi-step modal in the app (the Diesel Distribution driver/litres picker follows it too).
 
 ## Getting started
 
@@ -64,7 +88,13 @@ yarn ios
 
 ## Project structure
 
-See the [spec](../sitefleet-transport-module-spec.md#4-folder-structure) for the full `src/` layout (screens, services, stores, types, etc.).
+The app is organized around independent business modules, each with its own screens, services, and Firestore collections:
+
+- **Transport** (`src/screens/transport/`, `src/services/`) — the module documented in this repo today: drivers, routes, daily attendance/fuel entries, fuel price and pump tracking, driver payments, and the Bill/Summary PDF reports. Reached via the bottom tab bar's Transport tab.
+- **Construction** — a placeholder tab only ("Coming soon"), no functionality yet. A future module for tracking construction sites, planned to follow the same per-owner, Firestore-backed pattern as Transport.
+- More modules may be added the same way over time, each as its own top-level tab with its own screens/services/types, sharing the common `firebase/`, `components/`, `theme/`, and `stores/` layers.
+
+Shared infrastructure lives at the top of `src/`: `firebase/` (Auth + Firestore setup), `navigation/` (root nav, custom tab bar), `components/` (buttons, form fields, pickers, list rows, loading skeletons), `stores/` (Zustand global state), `theme/`, and `utils/`.
 
 ## Branching and commits
 
