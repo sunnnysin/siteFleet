@@ -99,7 +99,15 @@ Shared infrastructure lives at the top of `src/`: `firebase/` (Auth + Firestore 
 ## Branching and commits
 
 - No direct commits to `main`; all work happens on feature branches merged via pull request.
-- Branch names must follow `<type>/<short-description>`, where `<type>` is one of `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `ci` — e.g. `feat/driver-fuel-balance`, `fix/dashboard-crash`. A pre-commit hook rejects commits on `main` or on a branch name that doesn't match this pattern.
-- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `refactor:`, etc.) — enforced locally by a commit-msg hook (commitlint) and, on the PR itself, by the PR title check described below.
-- Every commit runs `eslint --fix` and `prettier --write` on staged `.ts`/`.tsx` files via a pre-commit hook (husky + lint-staged); the commit is blocked if ESLint reports any error it can't auto-fix.
-- Hooks install automatically on `yarn install` (the `prepare` script runs `husky`).
+- Branch names must follow `<type>/<short-description>`, where `<type>` is one of `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `ci` — e.g. `feat/driver-fuel-balance`, `fix/dashboard-crash`.
+- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `refactor:`, etc.).
+
+## Engineering workflow
+
+The rules above are enforced both locally, before code is pushed, and again in CI, before a PR can merge:
+
+- **CI checks on every PR** ([`ci.yml`](.github/workflows/ci.yml)): TypeScript typecheck, ESLint, and the full Jest suite (unit tests on business logic plus a render-smoke test for every screen) — all required to pass before merging.
+- **Inline review** via reviewdog ([`reviewdog.yml`](.github/workflows/reviewdog.yml)): ESLint and Prettier issues are posted as inline PR comments on changed lines, not just a pass/fail check.
+- **PR title and description linting** ([`pr-lint.yml`](.github/workflows/pr-lint.yml)): the title must follow Conventional Commits format, and the description must fill in the PR template's four required sections (Context, Technical Changes, Impact Analysis, How to Test) — a PR failing either check is blocked from merging.
+- **Local pre-commit enforcement** (husky + lint-staged, commitlint): a commit can't be made directly on `main`, the branch name must match the pattern above, and staged files are auto-fixed/checked by ESLint and Prettier before the commit is allowed through — the same rules enforced in CI are also enforced locally, before code is even pushed.
+- **Automated release build** on every merge to `main` ([`build-apk.yml`](.github/workflows/build-apk.yml)): a signed release APK is built, uploaded as a GitHub Actions artifact, attached to a rolling GitHub Release, and also pushed to a private Google Drive folder for quick access on-device.
