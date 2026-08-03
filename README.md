@@ -6,6 +6,18 @@ Internal, single-user app for managing a transport business: hiring vehicles wit
 
 Distributed as a sideloaded APK (not published to app stores). Cloud data via Firebase, tied to the admin's Google account.
 
+## Screenshots
+
+| Dashboard | Drivers list | Routes list |
+|---|---|---|
+| <img src="docs/screenshots/dashboard.png" width="220" /> | <img src="docs/screenshots/drivers-list.png" width="220" /> | <img src="docs/screenshots/routes-list.png" width="220" /> |
+| Masked payment/fuel summary tiles and the sectioned Transport nav list. | Permanent/Temporary segmented list with per-driver fuel balance. | Fixed per-route fuel allotments feeding the fuel-balance ledger. |
+
+| Date picker | Bill | Vehicle summary |
+|---|---|---|
+| <img src="docs/screenshots/date-picker.png" width="220" /> | <img src="docs/screenshots/bill-screen.png" width="220" /> | <img src="docs/screenshots/vehicle-summary.png" width="220" /> |
+| Custom calendar modal shared by every date/month navigator in the app. | Editable rate-per-trip with a PDF invoice matching the business's existing paper format. | Date-wise ACE vs. Bolero/PickUp attendance counts for a month. |
+
 ## Tech stack
 
 - Bare React Native CLI, TypeScript (strict mode)
