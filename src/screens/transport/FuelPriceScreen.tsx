@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,11 +7,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FormFieldSkeleton } from '@/components/FormFieldSkeleton';
 import { FormTextInput } from '@/components/FormTextInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
 import { DateNavigator } from '@/components/DateNavigator';
+import { Shimmer } from '@/components/Shimmer';
 import {
   fetchFuelPriceForDate,
   fetchFuelPricesForMonth,
@@ -25,7 +26,7 @@ import {
   todayKey,
 } from '@/utils/dateUtils';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import type { FuelPrice } from '@/types/fuelPrice';
 
@@ -87,11 +88,40 @@ export function FuelPriceScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <ScrollView contentContainerStyle={styles.list}>
+          <View style={styles.form}>
+            <View style={styles.dateNavigator}>
+              <DateNavigator
+                selectedDate={selectedDate}
+                onChange={setSelectedDate}
+              />
+            </View>
+            <FormFieldSkeleton labelWidth="45%" />
+            <Shimmer style={styles.saveButtonSkeleton} />
+          </View>
+
+          <Text style={styles.sectionTitle}>Price history</Text>
+          <MonthNavigator
+            selectedMonth={selectedMonth}
+            onChange={setSelectedMonth}
+          />
+
+          <View style={styles.cardContainer}>
+            {Array.from({ length: 5 }, (_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.historyRow,
+                  index === 4 && styles.historyRowLast,
+                ]}
+              >
+                <Shimmer style={styles.historyDateSkeleton} />
+                <Shimmer style={styles.historyPriceSkeleton} />
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -176,11 +206,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loadingIndicator: {
-    marginTop: spacing.xl,
-  },
   form: {
     padding: spacing.lg,
+  },
+  saveButtonSkeleton: {
+    height: 48,
+    borderRadius: radii.md,
   },
   dateNavigator: {
     marginHorizontal: -spacing.lg,
@@ -226,5 +257,13 @@ const styles = StyleSheet.create({
   historyPrice: {
     ...typography.body,
     color: colors.textSecondary,
+  },
+  historyDateSkeleton: {
+    width: '45%',
+    height: 15,
+  },
+  historyPriceSkeleton: {
+    width: '25%',
+    height: 15,
   },
 });

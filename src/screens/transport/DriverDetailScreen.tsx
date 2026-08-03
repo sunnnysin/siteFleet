@@ -1,20 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { DriverAdvanceRow } from '@/components/DriverAdvanceRow';
 import { DriverDetailCard } from '@/components/DriverDetailCard';
+import { DriverDetailCardSkeleton } from '@/components/DriverDetailCardSkeleton';
 import { DriverHistoryRow } from '@/components/DriverHistoryRow';
+import { DriverHistoryRowSkeleton } from '@/components/DriverHistoryRowSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { Shimmer } from '@/components/Shimmer';
 import { deleteDriver, fetchDriverById } from '@/services/driverService';
 import {
   computeDriverFuelBalance,
@@ -28,7 +24,7 @@ import { fetchRouteById } from '@/services/routeService';
 import { shareDriverMonthlyReport } from '@/services/driverReportService';
 import { computeMonthlyPayments } from '@/services/paymentService';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { formatCurrency } from '@/utils/currencyUtils';
 import { currentMonthKey, MONTH_FORMAT } from '@/utils/dateUtils';
@@ -186,11 +182,36 @@ export function DriverDetailScreen({
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+      <SafeAreaView style={styles.container} edges={[]}>
+        <ScrollView contentContainerStyle={styles.list}>
+          <View style={styles.monthNavigator}>
+            <MonthNavigator
+              selectedMonth={selectedMonth}
+              onChange={setSelectedMonth}
+            />
+          </View>
+          <DriverDetailCardSkeleton />
+          <View style={styles.actionsRow}>
+            <Shimmer style={styles.actionButtonSkeleton} />
+          </View>
+          <View style={styles.actionsRow}>
+            <Shimmer style={styles.actionButtonSkeleton} />
+          </View>
+
+          <View style={styles.sectionTitleRow}>
+            <Shimmer style={styles.sectionTitleSkeleton} />
+            <Shimmer style={styles.monthlyTotalSkeleton} />
+          </View>
+
+          <View style={styles.cardContainer}>
+            {Array.from({ length: 5 }, (_, index) => (
+              <DriverHistoryRowSkeleton key={index} isLast={index === 4} />
+            ))}
+          </View>
+        </ScrollView>
+        <View style={styles.footer}>
+          <Shimmer style={styles.footerButtonSkeleton} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -337,9 +358,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loadingIndicator: {
-    marginTop: spacing.xl,
-  },
   list: {
     padding: spacing.lg,
   },
@@ -352,6 +370,10 @@ const styles = StyleSheet.create({
   actionButton: {
     alignSelf: 'stretch',
   },
+  actionButtonSkeleton: {
+    height: 48,
+    borderRadius: radii.md,
+  },
   sectionTitleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -362,6 +384,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography.subheading,
     color: colors.textPrimary,
+  },
+  sectionTitleSkeleton: {
+    width: 130,
+    height: 18,
+  },
+  monthlyTotalSkeleton: {
+    width: 70,
+    height: 15,
   },
   cardContainer: {
     backgroundColor: 'white',
@@ -386,6 +416,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.background,
+  },
+  footerButtonSkeleton: {
+    height: 48,
+    borderRadius: radii.md,
   },
   exportError: {
     ...typography.caption,

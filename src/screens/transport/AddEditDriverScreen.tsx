@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,9 +12,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FormTextInput } from '@/components/FormTextInput';
+import { FormFieldSkeleton } from '@/components/FormFieldSkeleton';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
 import { SelectField } from '@/components/SelectField';
+import { Shimmer } from '@/components/Shimmer';
 import {
   createDriver,
   fetchDriverById,
@@ -32,7 +33,7 @@ import {
 } from '@/types/driver';
 import type { Route } from '@/types/route';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radii, spacing } from '@/theme/spacing';
 import type { TransportStackParamList } from '@/navigation/types';
 
 type AddEditDriverScreenProps = NativeStackScreenProps<
@@ -159,11 +160,20 @@ export function AddEditDriverScreen({
 
   if (isLoadingDriver) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <FormFieldSkeleton labelWidth="20%" />
+          <FormFieldSkeleton labelWidth="20%" />
+          <FormFieldSkeleton labelWidth="45%" />
+          <FormFieldSkeleton labelWidth="45%" />
+          <FormFieldSkeleton labelWidth="35%" />
+          <FormFieldSkeleton labelWidth="35%" />
+          <FormFieldSkeleton labelWidth="25%" />
+          <FormFieldSkeleton labelWidth="35%" />
+          <View style={styles.saveButton}>
+            <Shimmer style={styles.saveButtonSkeleton} />
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -343,9 +353,6 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.lg,
   },
-  loadingIndicator: {
-    marginTop: spacing.xl,
-  },
   routeHint: {
     color: colors.textSecondary,
     marginBottom: spacing.md,
@@ -356,5 +363,9 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: spacing.md,
+  },
+  saveButtonSkeleton: {
+    height: 48,
+    borderRadius: radii.md,
   },
 });

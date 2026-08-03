@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Modal,
   Pressable,
@@ -17,6 +16,7 @@ import { DriverTypeBadge } from '@/components/DriverTypeBadge';
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { FormTextInput } from '@/components/FormTextInput';
+import { Shimmer } from '@/components/Shimmer';
 import { fetchDrivers } from '@/services/driverService';
 import {
   fetchDieselDistributionForDate,
@@ -224,11 +224,54 @@ export function DieselDistributionScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+      <SafeAreaView style={styles.container} edges={[]}>
+        <DateNavigator selectedDate={selectedDate} onChange={setSelectedDate} />
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.cardContainer}>
+            <View style={styles.tableHeaderRow}>
+              <Text style={[styles.tableCell, styles.tableHeaderText]}>
+                Driver
+              </Text>
+              <Text
+                style={[
+                  styles.tableCell,
+                  styles.tableHeaderText,
+                  styles.center,
+                ]}
+              >
+                Vehicle
+              </Text>
+              <Text
+                style={[
+                  styles.tableCell,
+                  styles.tableHeaderText,
+                  styles.litresCell,
+                ]}
+              >
+                Litres
+              </Text>
+              <View style={styles.removeCell} />
+            </View>
+            {Array.from({ length: 4 }, (_, index) => (
+              <View
+                key={index}
+                style={[styles.tableRow, index === 3 && styles.tableRowLast]}
+              >
+                <Shimmer style={styles.rowNameSkeleton} />
+                <Shimmer style={styles.rowVehicleSkeleton} />
+                <Shimmer style={styles.rowLitresSkeleton} />
+                <View style={styles.removeCell} />
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.actionRow}>
+            <Shimmer style={styles.buttonSkeleton} />
+          </View>
+          <View style={styles.actionRow}>
+            <Shimmer style={styles.buttonSkeleton} />
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -422,9 +465,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loadingIndicator: {
-    marginTop: spacing.xl,
-  },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -482,6 +522,25 @@ const styles = StyleSheet.create({
     width: 36,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  rowNameSkeleton: {
+    flex: 1,
+    height: 15,
+    marginLeft: spacing.sm,
+  },
+  rowVehicleSkeleton: {
+    flex: 1,
+    height: 15,
+    alignSelf: 'center',
+  },
+  rowLitresSkeleton: {
+    flex: 0.8,
+    height: 15,
+    marginRight: spacing.sm,
+  },
+  buttonSkeleton: {
+    height: 48,
+    borderRadius: radii.md,
   },
   removeLabel: {
     ...typography.body,

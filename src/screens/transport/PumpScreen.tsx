@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,11 +8,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format, parse } from 'date-fns';
+import { FormFieldSkeleton } from '@/components/FormFieldSkeleton';
 import { FormTextInput } from '@/components/FormTextInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
 import { DateNavigator } from '@/components/DateNavigator';
+import { Shimmer } from '@/components/Shimmer';
 import { fetchFuelPriceForDate } from '@/services/fuelPriceService';
 import { fetchDailyEntriesForDate } from '@/services/dailyEntryService';
 import {
@@ -31,7 +32,7 @@ import {
   todayKey,
 } from '@/utils/dateUtils';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import type { FuelPrice } from '@/types/fuelPrice';
 import type { PumpEntry } from '@/types/pumpEntry';
@@ -135,11 +136,48 @@ export function PumpScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+      <SafeAreaView style={styles.container} edges={[]}>
+        <ScrollView contentContainerStyle={styles.list}>
+          <View style={styles.form}>
+            <View style={styles.dateNavigator}>
+              <DateNavigator
+                selectedDate={selectedDate}
+                onChange={setSelectedDate}
+              />
+            </View>
+            <FormFieldSkeleton labelWidth="40%" />
+            <Shimmer style={styles.saveButtonSkeleton} />
+          </View>
+
+          <Text style={styles.sectionTitle}>Month-wise history</Text>
+          <View style={styles.monthNavigator}>
+            <MonthNavigator
+              selectedMonth={selectedMonth}
+              onChange={setSelectedMonth}
+            />
+          </View>
+          <View style={styles.totalsRow}>
+            <Shimmer style={styles.totalsSkeleton} />
+            <Shimmer style={styles.totalsSkeleton} />
+          </View>
+
+          <View style={styles.cardContainer}>
+            {Array.from({ length: 5 }, (_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.historyRow,
+                  index === 4 && styles.historyRowLast,
+                ]}
+              >
+                <Shimmer style={styles.historyCellSkeleton} />
+                <Shimmer style={styles.historyCellSkeleton} />
+                <Shimmer style={styles.historyCellSkeleton} />
+                <Shimmer style={styles.historyCellSkeleton} />
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -273,11 +311,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loadingIndicator: {
-    marginTop: spacing.xl,
-  },
   form: {
     paddingVertical: spacing.lg,
+  },
+  saveButtonSkeleton: {
+    height: 48,
+    borderRadius: radii.md,
   },
   dateNavigator: {
     marginHorizontal: -spacing.lg,
@@ -316,6 +355,10 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textPrimary,
     fontWeight: '600',
+  },
+  totalsSkeleton: {
+    width: '30%',
+    height: 15,
   },
   list: {
     paddingHorizontal: spacing.lg,
@@ -366,6 +409,10 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     flex: 1,
     textAlign: 'right',
+  },
+  historyCellSkeleton: {
+    flex: 1,
+    height: 15,
   },
   footer: {
     paddingHorizontal: spacing.lg,

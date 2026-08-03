@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '@/components/EmptyState';
 import { FormTextInput } from '@/components/FormTextInput';
 import { DriverListItem } from '@/components/DriverListItem';
+import { DriverListItemSkeleton } from '@/components/DriverListItemSkeleton';
 import { SegmentedTabs } from '@/components/SegmentedTabs';
 import { fetchDrivers, setDriverActiveStatus } from '@/services/driverService';
 import { fetchRoutes } from '@/services/routeService';
@@ -132,10 +132,11 @@ export function DriverListScreen({ navigation }: DriverListScreenProps) {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+        <View style={styles.list}>
+          {Array.from({ length: 6 }, (_, index) => (
+            <DriverListItemSkeleton key={index} />
+          ))}
+        </View>
       ) : errorMessage !== null ? (
         <EmptyState
           title="Couldn't load drivers"
@@ -187,9 +188,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     gap: spacing.sm,
-  },
-  loadingIndicator: {
-    marginTop: spacing.xl,
   },
   list: {
     padding: spacing.lg,

@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
+import { Shimmer } from '@/components/Shimmer';
 import { fetchDailyEntriesForMonth } from '@/services/dailyEntryService';
 import { fetchDrivers } from '@/services/driverService';
 import {
@@ -79,11 +74,47 @@ export function SummaryScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+      <SafeAreaView style={styles.container} edges={[]}>
+        <ScrollView contentContainerStyle={styles.list}>
+          <View style={styles.monthNavigator}>
+            <MonthNavigator
+              selectedMonth={selectedMonth}
+              onChange={setSelectedMonth}
+            />
+          </View>
+
+          <View style={styles.cardContainer}>
+            <View style={styles.tableHeaderRow}>
+              <Text
+                style={[styles.tableCell, styles.dateCell, styles.headerText]}
+              >
+                Date
+              </Text>
+              {VEHICLE_TYPES.map(type => (
+                <Text
+                  key={type}
+                  style={[styles.tableCell, styles.headerText, styles.center]}
+                >
+                  {type}
+                </Text>
+              ))}
+              <Text
+                style={[styles.tableCell, styles.headerText, styles.center]}
+              >
+                Total
+              </Text>
+            </View>
+
+            {Array.from({ length: 6 }, (_, index) => (
+              <View key={index} style={styles.tableRow}>
+                <Shimmer style={styles.dateCellSkeleton} />
+                <Shimmer style={styles.cellSkeleton} />
+                <Shimmer style={styles.cellSkeleton} />
+                <Shimmer style={styles.cellSkeleton} />
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -203,9 +234,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loadingIndicator: {
-    marginTop: spacing.xl,
-  },
   list: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
@@ -252,6 +280,17 @@ const styles = StyleSheet.create({
   },
   dateCell: {
     flex: 1.4,
+  },
+  dateCellSkeleton: {
+    flex: 1.4,
+    height: 15,
+    margin: spacing.sm,
+  },
+  cellSkeleton: {
+    flex: 1,
+    height: 15,
+    margin: spacing.sm,
+    alignSelf: 'center',
   },
   headerText: {
     fontWeight: '600',

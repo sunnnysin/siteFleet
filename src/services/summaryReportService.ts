@@ -47,17 +47,21 @@ function buildReportHtml(
       <head>
         <meta charset="utf-8" />
         <style>
-          body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #111827; padding: 32px; }
-          h1 { text-align: center; font-size: 28px; letter-spacing: 1px; margin-bottom: 4px; }
-          .address { text-align: center; font-size: 13px; margin: 2px 0; }
-          .meta-row { display: flex; justify-content: space-between; margin-top: 20px; font-size: 14px; }
-          .meta-row strong { font-size: 15px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-          th, td { border: 1px solid #000; padding: 8px 10px; font-size: 13px; text-align: center; }
+          body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #111827; padding: 20px; }
+          h1 { text-align: center; font-size: 24px; letter-spacing: 1px; margin-bottom: 4px; }
+          .address { text-align: center; font-size: 12px; margin: 1px 0; letter-spacing: 0.3px; }
+          .meta-row { display: flex; justify-content: space-between; margin-top: 30px; font-size: 13px; }
+          .meta-row strong { font-size: 14px; }
+          table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 8px; }
+          th, td { border: 1px solid #000; padding: 4px 8px; font-size: 12px; text-align: center; }
+          th:nth-child(1), td:nth-child(1),
+          th:nth-child(2), td:nth-child(2),
+          th:nth-child(3), td:nth-child(3) { width: 27%; }
+          th:nth-child(4), td:nth-child(4) { width: 19%; }
           th { background: #F5F6FA; }
           .total-cell { font-weight: bold; }
           .footer-row td { font-weight: bold; }
-          .signature { display: flex; justify-content: space-between; margin-top: 96px; font-size: 13px; text-align: center; }
+          .signature { display: flex; justify-content: space-between; margin-top: 86px; font-size: 12px; text-align: center; }
         </style>
       </head>
       <body>
@@ -67,7 +71,7 @@ function buildReportHtml(
         <div class="address">Hilalpur Hajipur Vaishali, pin-844102</div>
 
         <div class="meta-row">
-          <span>Block Hilalpur Hajipur , Vaishali</span>
+          <span>Block :- Hilalpur Hajipur, Vaishali</span>
           <span>Month :-<strong>${monthLabel}</strong></span>
         </div>
 

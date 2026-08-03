@@ -1,18 +1,14 @@
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FormTextInput } from '@/components/FormTextInput';
+import { FormFieldSkeleton } from '@/components/FormFieldSkeleton';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
+import { Shimmer } from '@/components/Shimmer';
 import {
   createRoute,
   fetchRouteById,
@@ -26,7 +22,7 @@ import {
   type RouteFormValues,
 } from '@/types/route';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radii, spacing } from '@/theme/spacing';
 import type { TransportStackParamList } from '@/navigation/types';
 
 type AddEditRouteScreenProps = NativeStackScreenProps<
@@ -129,11 +125,15 @@ export function AddEditRouteScreen({
 
   if (isLoadingRoute) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <FormFieldSkeleton labelWidth="35%" />
+          <FormFieldSkeleton labelWidth="55%" />
+          <FormFieldSkeleton labelWidth="45%" />
+          <View style={styles.saveButton}>
+            <Shimmer style={styles.saveButtonSkeleton} />
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -215,14 +215,15 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.lg,
   },
-  loadingIndicator: {
-    marginTop: spacing.xl,
-  },
   saveError: {
     color: colors.danger,
     marginBottom: spacing.md,
   },
   saveButton: {
     marginTop: spacing.md,
+  },
+  saveButtonSkeleton: {
+    height: 48,
+    borderRadius: radii.md,
   },
 });
