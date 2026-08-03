@@ -35,11 +35,13 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Upload APK to Google Drive
+        env:
+          GDRIVE_RCLONE_CONFIG: ${{ secrets.GDRIVE_RCLONE_CONFIG }}
         run: |
           set -euo pipefail
 
           mkdir -p ~/.config/rclone
-          echo "${{ secrets.GDRIVE_RCLONE_CONFIG }}" > ~/.config/rclone/rclone.conf
+          printf '%s\n' "$GDRIVE_RCLONE_CONFIG" > ~/.config/rclone/rclone.conf
 
           sudo apt-get update
           sudo apt-get install -y rclone
