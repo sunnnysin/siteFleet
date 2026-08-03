@@ -30,7 +30,7 @@ jobs:
       - name: Write .env
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: Build debug APK
+      - name: Build release APK
         working-directory: android
         run: ./gradlew assembleRelease
 
@@ -60,7 +60,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-${{ github.sha }}
+          name: app-release-${{ github.sha }}
           path: android/app/build/outputs/apk/release/app-release.apk
 
       - name: Publish APK to release
@@ -68,7 +68,7 @@ jobs:
         with:
           tag_name: latest
           name: Latest build
-          body: Automated debug build from commit ${{ github.sha }}.
+          body: Automated release build from commit ${{ github.sha }}.
           prerelease: true
           make_latest: false
           files: android/app/build/outputs/apk/release/app-release.apk
