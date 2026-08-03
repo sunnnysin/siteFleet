@@ -34,6 +34,30 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug
 
+      - name: Upload APK to Google Drive
+        run: |
+          set -euo pipefail
+
+          echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_KEY }}' > gdrive-key.json
+
+          sudo apt-get update
+          sudo apt-get install -y rclone
+
+          rclone config create gdrive drive --non-interactive \
+            service_account_file=gdrive-key.json \
+            scope=drive
+
+          apk_name="SiteFleet-$(date +%d-%m-%Y).apk"
+
+          rclone copyto \
+            android/app/build/outputs/apk/debug/app-debug.apk \
+            "gdrive:${apk_name}" \
+            --drive-root-folder-id "${{ secrets.GDRIVE_FOLDER_ID }}"
+
+      - name: Remove Google Drive service account key
+        if: always()
+        run: rm -f gdrive-key.json
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
