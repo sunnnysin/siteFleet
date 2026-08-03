@@ -10,7 +10,8 @@
     "test": "jest",
     "cleanup": "rm -rf node_modules ios/Pods ios/build android/build android/.gradle ios/Podfile.lock package-lock.json yarn.lock",
     "setup": "yarn install && cd ios && pod install && cd ..",
-    "android:apk": "cd android && ./gradlew assembleRelease"
+    "android:apk": "cd android && ./gradlew assembleRelease",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -55,12 +56,20 @@
     "babel-plugin-module-resolver": "^5.0.3",
     "eslint": "^8.19.0",
     "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
     "jest": "^29.6.3",
+    "lint-staged": "^17.3.0",
     "prettier": "2.8.8",
     "react-test-renderer": "19.2.3",
     "typescript": "^5.8.3"
   },
   "engines": {
     "node": ">= 22.11.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }
