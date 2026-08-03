@@ -6,8 +6,6 @@ Internal, single-user app for managing a transport business: hiring vehicles wit
 
 Distributed as a sideloaded APK (not published to app stores). Cloud data via Firebase, tied to the admin's Google account.
 
-The full implementation spec lives at [`sitefleet-transport-module-spec.md`](../sitefleet-transport-module-spec.md) in the parent directory.
-
 ## Tech stack
 
 - Bare React Native CLI, TypeScript (strict mode)
@@ -64,7 +62,13 @@ yarn ios
 
 ## Project structure
 
-See the [spec](../sitefleet-transport-module-spec.md#4-folder-structure) for the full `src/` layout (screens, services, stores, types, etc.).
+The app is organized around independent business modules, each with its own screens, services, and Firestore collections:
+
+- **Transport** (`src/screens/transport/`, `src/services/`) — the module documented in this repo today: drivers, routes, daily attendance/fuel entries, fuel price and pump tracking, driver payments, and the Bill/Summary PDF reports. Reached via the bottom tab bar's Transport tab.
+- **Construction** — a placeholder tab only ("Coming soon"), no functionality yet. A future module for tracking construction sites, planned to follow the same per-owner, Firestore-backed pattern as Transport.
+- More modules may be added the same way over time, each as its own top-level tab with its own screens/services/types, sharing the common `firebase/`, `components/`, `theme/`, and `stores/` layers.
+
+Shared infrastructure lives at the top of `src/`: `firebase/` (Auth + Firestore setup), `navigation/` (root nav, custom tab bar), `components/` (buttons, form fields, pickers, list rows, loading skeletons), `stores/` (Zustand global state), `theme/`, and `utils/`.
 
 ## Branching and commits
 
