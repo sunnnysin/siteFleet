@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '@/components/EmptyState';
+import { FormFieldSkeleton } from '@/components/FormFieldSkeleton';
 import { FormTextInput } from '@/components/FormTextInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { SegmentedTabs } from '@/components/SegmentedTabs';
 import { SelectField } from '@/components/SelectField';
+import { Shimmer } from '@/components/Shimmer';
 import { fetchDrivers } from '@/services/driverService';
 import { fetchRoutes } from '@/services/routeService';
 import {
@@ -23,7 +19,7 @@ import {
 } from '@/services/dailyEntryService';
 import { fetchDieselDistributionForDate } from '@/services/dieselDistributionService';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radii, spacing } from '@/theme/spacing';
 import { formatDisplayDateWithWeekday } from '@/utils/dateUtils';
 import { dismissKeyboardAndWait } from '@/utils/navigationUtils';
 import type { TransportStackParamList } from '@/navigation/types';
@@ -199,11 +195,18 @@ export function AddEditDailyEntryScreen({
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <Shimmer style={styles.dateLabelSkeleton} />
+          <FormFieldSkeleton labelWidth="20%" />
+          <FormFieldSkeleton labelWidth="20%" />
+          <Shimmer style={styles.fieldLabelSkeleton} />
+          <Shimmer style={styles.attendanceTabsSkeleton} />
+          <FormFieldSkeleton labelWidth="60%" />
+          <View style={styles.saveButton}>
+            <Shimmer style={styles.saveButtonSkeleton} />
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -313,11 +316,13 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.lg,
   },
-  loadingIndicator: {
-    marginTop: spacing.xl,
-  },
   dateLabel: {
     color: colors.textSecondary,
+    marginBottom: spacing.md,
+  },
+  dateLabelSkeleton: {
+    width: '50%',
+    height: 15,
     marginBottom: spacing.md,
   },
   lockedDriverField: {
@@ -339,6 +344,16 @@ const styles = StyleSheet.create({
   attendanceTabs: {
     marginBottom: spacing.md,
   },
+  fieldLabelSkeleton: {
+    width: '25%',
+    height: 15,
+    marginBottom: spacing.xs,
+  },
+  attendanceTabsSkeleton: {
+    height: 40,
+    borderRadius: radii.sm,
+    marginBottom: spacing.md,
+  },
   routeFuelHint: {
     color: colors.textSecondary,
     marginTop: -spacing.sm,
@@ -350,5 +365,9 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: spacing.md,
+  },
+  saveButtonSkeleton: {
+    height: 48,
+    borderRadius: radii.md,
   },
 });

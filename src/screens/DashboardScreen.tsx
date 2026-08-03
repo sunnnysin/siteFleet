@@ -1,17 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Keyboard,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '@/components/EmptyState';
 import { SummaryCard } from '@/components/SummaryCard';
+import { SummaryCardSkeleton } from '@/components/SummaryCardSkeleton';
 import { NavigationTile } from '@/components/NavigationTile';
 import {
   computeEffectiveFuelCost,
@@ -195,10 +189,18 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
         </Text>
 
         {isLoading ? (
-          <ActivityIndicator
-            style={styles.loadingIndicator}
-            color={colors.primary}
-          />
+          <>
+            <View style={styles.cardRow}>
+              <SummaryCardSkeleton />
+              <SummaryCardSkeleton />
+              <SummaryCardSkeleton />
+            </View>
+            <View style={[styles.cardRow, styles.cardRowSpacing]}>
+              <SummaryCardSkeleton />
+              <SummaryCardSkeleton />
+              <SummaryCardSkeleton />
+            </View>
+          </>
         ) : errorMessage !== null ? (
           <EmptyState
             title="Couldn't load summary"
@@ -347,9 +349,6 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
-  },
-  loadingIndicator: {
-    marginVertical: spacing.xl,
   },
   cardRow: {
     flexDirection: 'row',

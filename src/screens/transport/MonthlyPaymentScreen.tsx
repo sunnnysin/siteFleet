@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format, parse } from 'date-fns';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
 import { MonthlyPaymentRow } from '@/components/MonthlyPaymentRow';
+import { MonthlyPaymentRowSkeleton } from '@/components/MonthlyPaymentRowSkeleton';
 import { UpiPaymentModal } from '@/components/UpiPaymentModal';
 import {
   fetchDriverById,
@@ -250,10 +251,11 @@ export function MonthlyPaymentScreen({
       />
 
       {isLoading ? (
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+        <View style={styles.list}>
+          {Array.from({ length: 5 }, (_, index) => (
+            <MonthlyPaymentRowSkeleton key={index} />
+          ))}
+        </View>
       ) : errorMessage !== null ? (
         <EmptyState
           title="Couldn't load payments"
@@ -311,9 +313,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  loadingIndicator: {
-    marginTop: spacing.xl,
   },
   list: {
     padding: spacing.lg,

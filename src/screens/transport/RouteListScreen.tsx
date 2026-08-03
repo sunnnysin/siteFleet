@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { EmptyState } from '@/components/EmptyState';
 import { RouteListItem } from '@/components/RouteListItem';
+import { RouteListItemSkeleton } from '@/components/RouteListItemSkeleton';
 import { deleteRoute, fetchRoutes } from '@/services/routeService';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -85,10 +86,11 @@ export function RouteListScreen({ navigation }: RouteListScreenProps) {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       {isLoading ? (
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+        <View style={styles.list}>
+          {Array.from({ length: 6 }, (_, index) => (
+            <RouteListItemSkeleton key={index} />
+          ))}
+        </View>
       ) : errorMessage !== null ? (
         <EmptyState
           title="Couldn't load routes"
@@ -134,9 +136,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  loadingIndicator: {
-    marginTop: spacing.xl,
   },
   list: {
     padding: spacing.lg,

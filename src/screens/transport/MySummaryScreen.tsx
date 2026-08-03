@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
 import { SummaryCard } from '@/components/SummaryCard';
+import { SummaryCardSkeleton } from '@/components/SummaryCardSkeleton';
 import {
   computeEffectiveFuelCost,
   fetchDailyEntriesForMonth,
@@ -112,10 +113,19 @@ export function MySummaryScreen() {
       />
 
       {isLoading ? (
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+        <View style={styles.content}>
+          <View style={styles.cardRow}>
+            <SummaryCardSkeleton />
+            <SummaryCardSkeleton />
+          </View>
+          <View style={[styles.cardRow, styles.cardRowSpacing]}>
+            <SummaryCardSkeleton />
+            <SummaryCardSkeleton />
+          </View>
+          <View style={[styles.cardRow, styles.cardRowSpacing]}>
+            <SummaryCardSkeleton />
+          </View>
+        </View>
       ) : errorMessage !== null ? (
         <EmptyState
           title="Couldn't load summary"
@@ -161,9 +171,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  loadingIndicator: {
-    marginTop: spacing.xl,
   },
   content: {
     padding: spacing.lg,

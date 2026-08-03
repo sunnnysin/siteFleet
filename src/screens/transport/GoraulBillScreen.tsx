@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format, parse } from 'date-fns';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { FormFieldSkeleton } from '@/components/FormFieldSkeleton';
 import { FormTextInput } from '@/components/FormTextInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
+import { Shimmer } from '@/components/Shimmer';
 import {
   computeGoraulSummaryTotals,
   fetchGoraulSummary,
@@ -30,7 +26,7 @@ import { formatCurrency } from '@/utils/currencyUtils';
 import { currentMonthKey, MONTH_FORMAT } from '@/utils/dateUtils';
 import { VEHICLE_TYPES, type VehicleType } from '@/types/driver';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import type { TransportStackParamList } from '@/navigation/types';
 
@@ -152,11 +148,54 @@ export function GoraulBillScreen({ navigation }: GoraulBillScreenProps) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.monthNavigator}>
+            <MonthNavigator
+              selectedMonth={selectedMonth}
+              onChange={setSelectedMonth}
+            />
+          </View>
+
+          <Text style={styles.sectionTitle}>Rate per trip</Text>
+          <FormFieldSkeleton labelWidth="35%" />
+          <FormFieldSkeleton labelWidth="45%" />
+          <Shimmer style={styles.saveRatesButtonSkeleton} />
+
+          <Text style={styles.sectionTitle}>This month</Text>
+          <View style={styles.cardContainer}>
+            <View style={styles.tableHeaderRow}>
+              <Text style={[styles.tableCell, styles.tableHeaderText]}>
+                Particulars
+              </Text>
+              <Text
+                style={[
+                  styles.tableCell,
+                  styles.tableHeaderText,
+                  styles.center,
+                ]}
+              >
+                Nos.
+              </Text>
+              <Text
+                style={[styles.tableCell, styles.tableHeaderText, styles.right]}
+              >
+                Amount
+              </Text>
+            </View>
+            {VEHICLE_TYPES.map(type => (
+              <View key={type} style={styles.tableRow}>
+                <Shimmer style={styles.particularsSkeleton} />
+                <Shimmer style={styles.nosSkeleton} />
+                <Shimmer style={styles.amountSkeleton} />
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.exportButton}>
+            <Shimmer style={styles.saveRatesButtonSkeleton} />
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -296,11 +335,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loadingIndicator: {
-    marginTop: spacing.xl,
-  },
   content: {
     padding: spacing.lg,
+  },
+  saveRatesButtonSkeleton: {
+    height: 48,
+    borderRadius: radii.md,
   },
   monthNavigator: {
     marginHorizontal: -spacing.lg,
@@ -363,5 +403,22 @@ const styles = StyleSheet.create({
   },
   exportButton: {
     marginTop: spacing.lg,
+  },
+  particularsSkeleton: {
+    flex: 1,
+    height: 15,
+    margin: spacing.sm,
+  },
+  nosSkeleton: {
+    flex: 1,
+    height: 15,
+    margin: spacing.sm,
+    alignSelf: 'center',
+  },
+  amountSkeleton: {
+    flex: 1,
+    height: 15,
+    margin: spacing.sm,
+    alignSelf: 'flex-end',
   },
 });

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   RefreshControl,
@@ -12,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { DailyEntryRow } from '@/components/DailyEntryRow';
+import { DailyEntryRowSkeleton } from '@/components/DailyEntryRowSkeleton';
 import { DateNavigator } from '@/components/DateNavigator';
 import { EmptyState } from '@/components/EmptyState';
 import {
@@ -179,10 +179,11 @@ export function DailyEntryListScreen({
       <DateNavigator selectedDate={selectedDate} onChange={setSelectedDate} />
 
       {isLoading ? (
-        <ActivityIndicator
-          style={styles.loadingIndicator}
-          color={colors.primary}
-        />
+        <View style={styles.list}>
+          {Array.from({ length: 4 }, (_, index) => (
+            <DailyEntryRowSkeleton key={index} />
+          ))}
+        </View>
       ) : errorMessage !== null ? (
         <EmptyState
           title="Couldn't load entries"
@@ -265,9 +266,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  loadingIndicator: {
-    marginTop: spacing.xl,
   },
   fuelPriceWarning: {
     marginHorizontal: spacing.lg,
