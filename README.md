@@ -91,7 +91,7 @@ yarn ios
 The app is organized around independent business modules, each with its own screens, services, and Firestore collections:
 
 - **Transport** (`src/screens/transport/`, `src/services/`) — the module documented in this repo today: drivers, routes, daily attendance/fuel entries, fuel price and pump tracking, driver payments, and the Bill/Summary PDF reports. Reached via the bottom tab bar's Transport tab.
-- **Construction** — a placeholder tab only ("Coming soon"), no functionality yet. A future module for tracking construction sites, planned to follow the same per-owner, Firestore-backed pattern as Transport.
+- **Construction** — currently a placeholder tab ("Coming soon") in the app; the scope and data model are being defined now, and the module will be built following the same per-owner, Firestore-backed pattern as Transport.
 - More modules may be added the same way over time, each as its own top-level tab with its own screens/services/types, sharing the common `firebase/`, `components/`, `theme/`, and `stores/` layers.
 
 Shared infrastructure lives at the top of `src/`: `firebase/` (Auth + Firestore setup), `navigation/` (root nav, custom tab bar), `components/` (buttons, form fields, pickers, list rows, loading skeletons), `stores/` (Zustand global state), `theme/`, and `utils/`.
