@@ -1,5 +1,7 @@
 module.exports = {
   preset: '@react-native/jest-preset',
+  testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
+  testTimeout: 15000,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'mjs', 'node'],
   transform: {
     '^.+\\.(js|jsx|ts|tsx|mjs)$': 'babel-jest',

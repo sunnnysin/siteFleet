@@ -1,0 +1,17 @@
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$current_branch" = "main" ]; then
+  echo "✖ Direct commits to main are not allowed. Create a feature branch instead, e.g.:"
+  echo "    git checkout -b feat/your-change-name"
+  exit 1
+fi
+
+branch_pattern="^(feat|fix|chore|refactor|docs|test|ci)\/[a-z0-9._-]+$"
+if ! echo "$current_branch" | grep -Eq "$branch_pattern"; then
+  echo "✖ Branch name \"$current_branch\" doesn't follow the required pattern."
+  echo "  Expected: <feat|fix|chore|refactor|docs|test|ci>/<short-description>"
+  echo "  Example:  feat/driver-fuel-balance"
+  exit 1
+fi
+
+npx lint-staged

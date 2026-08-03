@@ -99,4 +99,7 @@ Shared infrastructure lives at the top of `src/`: `firebase/` (Auth + Firestore 
 ## Branching and commits
 
 - No direct commits to `main`; all work happens on feature branches merged via pull request.
-- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `refactor:`, etc.).
+- Branch names must follow `<type>/<short-description>`, where `<type>` is one of `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `ci` — e.g. `feat/driver-fuel-balance`, `fix/dashboard-crash`. A pre-commit hook rejects commits on `main` or on a branch name that doesn't match this pattern.
+- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `refactor:`, etc.) — enforced locally by a commit-msg hook (commitlint) and, on the PR itself, by the PR title check described below.
+- Every commit runs `eslint --fix` and `prettier --write` on staged `.ts`/`.tsx` files via a pre-commit hook (husky + lint-staged); the commit is blocked if ESLint reports any error it can't auto-fix.
+- Hooks install automatically on `yarn install` (the `prepare` script runs `husky`).
