@@ -38,14 +38,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_KEY }}' > gdrive-key.json
+          mkdir -p ~/.config/rclone
+          echo "${{ secrets.GDRIVE_RCLONE_CONFIG }}" > ~/.config/rclone/rclone.conf
 
           sudo apt-get update
           sudo apt-get install -y rclone
-
-          rclone config create gdrive drive --non-interactive \
-            service_account_file=gdrive-key.json \
-            scope=drive
 
           apk_name="SiteFleet-$(date +%d-%m-%Y).apk"
 
@@ -54,9 +51,9 @@ jobs:
             "gdrive:${apk_name}" \
             --drive-root-folder-id "${{ secrets.GDRIVE_FOLDER_ID }}"
 
-      - name: Remove Google Drive service account key
+      - name: Remove Google Drive rclone config
         if: always()
-        run: rm -f gdrive-key.json
+        run: rm -f ~/.config/rclone/rclone.conf
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
