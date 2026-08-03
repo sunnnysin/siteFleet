@@ -1,0 +1,40 @@
+name: PR lint
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  description:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR description follows the template
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body ?? '';
+
+            if (body.trim().length === 0) {
+              core.setFailed(
+                'PR description is empty. Fill in the PR template (Summary, Changes, Testing done).',
+              );
+              return;
+            }
+
+            const requiredSections = ['Summary', 'Changes', 'Testing done'];
+            const missingSections = requiredSections.filter(
+              section => !new RegExp(`##\\s*${section}`, 'i').test(body),
+            );
+
+            if (missingSections.length > 0) {
+              core.setFailed(
+                `PR description is missing required section(s): ${missingSections.join(', ')}. Use the PR template.`,
+              );
+            }
