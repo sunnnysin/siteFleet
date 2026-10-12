@@ -64,7 +64,7 @@ function buildReportHtml(
       <body>
         <div class="mobile">Mob:- 9430483150</div>
         <div class="title">BILL</div>
-        <div class="name">Shivam Singh</div>
+        <div class="name">MR. INDUSTRIES</div>
         <div class="address">At:- Pakauli, PO:- Rajason, Vaishali pin-844102</div>
         <div class="address">All Type of Vehicle Supplier.</div>
 
@@ -75,7 +75,7 @@ function buildReportHtml(
 
         <div class="meta">
           <div class="meta-row"><span class="meta-label">Account Details:-</span></div>
-          <div class="meta-row"><span class="meta-label">Account Number:-</span><span>6016000100229795</span></div>
+          <div class="meta-row"><span class="meta-label">Account Number:-</span><span>6016002100004334</span></div>
           <div class="meta-row"><span class="meta-label">IFSC Code:-</span><span>PUNB0601600</span></div>
           <div class="meta-row"><span class="meta-label">PAN NO.:-</span><span>NOMPS3118J</span></div>
           <div class="meta-row"><span class="meta-label">Aadhar No.:-</span><span>9246 1996 0950</span></div>
