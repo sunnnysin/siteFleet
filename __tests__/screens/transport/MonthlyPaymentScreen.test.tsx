@@ -8,10 +8,7 @@ import {
   treeContainsText,
 } from '../testUtils';
 
-type Props = NativeStackScreenProps<
-  TransportStackParamList,
-  'MonthlyPayment'
->;
+type Props = NativeStackScreenProps<TransportStackParamList, 'MonthlyPayment'>;
 
 jest.mock('@/services/driverService', () => ({
   fetchDriverById: jest.fn().mockResolvedValue(null),
@@ -25,6 +22,18 @@ jest.mock('@/services/paymentService', () => ({
   markMonthlyPaymentUnpaid: jest.fn(),
 }));
 
+jest.mock('@/services/dailyEntryService', () => ({
+  fetchAllDailyEntries: jest.fn().mockResolvedValue([]),
+}));
+
+jest.mock('@/services/driverAdvanceService', () => ({
+  fetchAllOwnerDriverAdvances: jest.fn().mockResolvedValue([]),
+}));
+
+jest.mock('@/services/driverPaymentService', () => ({
+  fetchAllOwnerDriverPayments: jest.fn().mockResolvedValue([]),
+}));
+
 jest.mock('@/services/upiService', () => ({
   fetchAvailableUpiApps: jest.fn().mockResolvedValue([]),
   openUpiAppDeepLink: jest.fn(),
@@ -34,9 +43,7 @@ describe('MonthlyPaymentScreen', () => {
   it('renders without throwing and shows the empty state', async () => {
     const renderer = await renderScreen(
       <MonthlyPaymentScreen
-        navigation={
-          createNavigationMock() as unknown as Props['navigation']
-        }
+        navigation={createNavigationMock() as unknown as Props['navigation']}
         route={createRouteMock() as unknown as Props['route']}
       />,
     );

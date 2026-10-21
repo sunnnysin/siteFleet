@@ -14,6 +14,7 @@ interface MonthlyPaymentRowProps {
   payment: MonthlyPayment;
   driverType: DriverType | null;
   isDriverDeleted: boolean;
+  canMarkUnpaid: boolean;
   onPress: () => void;
   onPay: () => void;
   onMarkPaid: () => void;
@@ -25,6 +26,7 @@ export function MonthlyPaymentRow({
   payment,
   driverType,
   isDriverDeleted,
+  canMarkUnpaid,
   onPress,
   onPay,
   onMarkPaid,
@@ -79,7 +81,7 @@ export function MonthlyPaymentRow({
             />
           </View>
         </View>
-      ) : (
+      ) : canMarkUnpaid ? (
         <TouchableOpacity
           style={styles.markUnpaidButton}
           onPress={onMarkUnpaid}
@@ -89,7 +91,7 @@ export function MonthlyPaymentRow({
         >
           <Text style={styles.markUnpaidLabel}>Mark as unpaid</Text>
         </TouchableOpacity>
-      )}
+      ) : null}
     </TouchableOpacity>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { DateNavigator } from '@/components/DateNavigator';
+import { DayGrid } from '@/components/DayGrid';
 import { FormTextInput } from '@/components/FormTextInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { fetchAllDailyEntriesForDriver } from '@/services/dailyEntryService';
@@ -11,10 +11,18 @@ import { computeDriverBalance } from '@/services/driverBalanceService';
 import {
   fetchAllDriverPayments,
   saveDriverPayment,
+  updateDriverPayment,
 } from '@/services/driverPaymentService';
 import { fetchDriverById } from '@/services/driverService';
 import { formatCurrency, roundToTwoDecimals } from '@/utils/currencyUtils';
-import { formatMonthKey, parseDateKey, todayKey } from '@/utils/dateUtils';
+import {
+  currentMonthKey,
+  formatDateKey,
+  formatDisplayDateWithWeekday,
+  parseMonthKey,
+  todayKey,
+} from '@/utils/dateUtils';
+import { endOfMonth, format } from 'date-fns';
 import { dismissKeyboardAndWait } from '@/utils/navigationUtils';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -30,16 +38,37 @@ type AddDriverPaymentScreenProps = NativeStackScreenProps<
   'AddDriverPayment'
 >;
 
+function resolveDefaultDate(monthKey: string): string {
+  const today = todayKey();
+  return today.startsWith(monthKey)
+    ? today
+    : formatDateKey(endOfMonth(parseMonthKey(monthKey)));
+}
+
+function parseSelectedYear(dateKey: string): number {
+  return Number(dateKey.slice(0, 4));
+}
+
+function parseSelectedDay(dateKey: string): number {
+  return Number(dateKey.slice(8, 10));
+}
+
 export function AddDriverPaymentScreen({
   route,
   navigation,
 }: AddDriverPaymentScreenProps) {
-  const driverId = route.params.driverId;
+  const { driverId, paymentId } = route.params;
+  const isEditMode = paymentId !== undefined;
   const [driver, setDriver] = useState<Driver | null>(null);
   const [entries, setEntries] = useState<DailyEntry[]>([]);
   const [advances, setAdvances] = useState<DriverAdvance[]>([]);
   const [payments, setPayments] = useState<DriverPayment[]>([]);
-  const [selectedDate, setSelectedDate] = useState(todayKey());
+  const [monthKey, setMonthKey] = useState(
+    route.params.month ?? currentMonthKey(),
+  );
+  const [selectedDate, setSelectedDate] = useState(() =>
+    resolveDefaultDate(route.params.month ?? currentMonthKey()),
+  );
   const [amountInput, setAmountInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -63,6 +92,14 @@ export function AddDriverPaymentScreen({
         setEntries(fetchedEntries);
         setAdvances(fetchedAdvances);
         setPayments(fetchedPayments);
+        const editedPayment = fetchedPayments.find(
+          payment => payment.id === paymentId,
+        );
+        if (editedPayment !== undefined) {
+          setMonthKey(editedPayment.month);
+          setSelectedDate(editedPayment.date);
+          setAmountInput(String(editedPayment.amount));
+        }
       } catch (error) {
         setErrorMessage(
           error instanceof Error ? error.message : 'Failed to load driver.',
@@ -72,9 +109,10 @@ export function AddDriverPaymentScreen({
       }
     }
     void loadData();
-  }, [driverId]);
+  }, [driverId, paymentId]);
 
-  const monthKey = formatMonthKey(parseDateKey(selectedDate));
+  const editedPayment = payments.find(payment => payment.id === paymentId);
+  const monthDate = parseMonthKey(monthKey);
   const balance =
     driver === null
       ? null
@@ -83,7 +121,7 @@ export function AddDriverPaymentScreen({
           driver.dailyRate,
           entries,
           advances,
-          payments,
+          payments.filter(payment => payment.id !== paymentId),
         );
 
   async function handleSave(): Promise<void> {
@@ -107,7 +145,14 @@ export function AddDriverPaymentScreen({
     setIsSaving(true);
     setErrorMessage(null);
     try {
-      await saveDriverPayment({ driverId, date: selectedDate, amount });
+      if (editedPayment !== undefined) {
+        await updateDriverPayment(editedPayment, {
+          date: selectedDate,
+          amount,
+        });
+      } else {
+        await saveDriverPayment({ driverId, date: selectedDate, amount });
+      }
       await dismissKeyboardAndWait();
       navigation.goBack();
     } catch (error) {
@@ -125,10 +170,24 @@ export function AddDriverPaymentScreen({
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.dateNavigator}>
-          <DateNavigator
-            selectedDate={selectedDate}
-            onChange={setSelectedDate}
+        <Text style={styles.monthLabel}>{format(monthDate, 'MMMM yyyy')}</Text>
+        <Text style={styles.dateLabel}>
+          Payment date: {formatDisplayDateWithWeekday(selectedDate)}
+        </Text>
+        <View style={styles.calendarCard}>
+          <DayGrid
+            year={monthDate.getFullYear()}
+            monthIndex={monthDate.getMonth()}
+            selectedYear={parseSelectedYear(selectedDate)}
+            selectedMonthIndex={monthDate.getMonth()}
+            selectedDay={parseSelectedDay(selectedDate)}
+            onSelectDay={day =>
+              setSelectedDate(
+                formatDateKey(
+                  new Date(monthDate.getFullYear(), monthDate.getMonth(), day),
+                ),
+              )
+            }
           />
         </View>
         {driver !== null ? (
@@ -159,7 +218,7 @@ export function AddDriverPaymentScreen({
         />
         <View style={styles.saveButton}>
           <PrimaryButton
-            label="Save payment"
+            label={isEditMode ? 'Update payment' : 'Save payment'}
             onPress={() => void handleSave()}
             isLoading={isSaving}
             isDisabled={isLoading || driver === null}
@@ -178,10 +237,31 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.lg,
   },
-  dateNavigator: {
-    marginHorizontal: -spacing.lg,
-    marginTop: -spacing.sm,
+  monthLabel: {
+    ...typography.heading,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  dateLabel: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
     marginBottom: spacing.sm,
+  },
+  calendarCard: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 2.54,
+    elevation: 3,
   },
   driverName: {
     ...typography.subheading,

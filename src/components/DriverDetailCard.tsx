@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StatusBadge } from '@/components/StatusBadge';
 import { colors } from '@/theme/colors';
 import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -60,6 +61,7 @@ export function DriverDetailCard({
             {driver.driverType === 'permanent' ? 'Permanent' : 'Temporary'}
           </Text>
         </View>
+        {balance.isFullyPaid ? <StatusBadge status="paid" /> : null}
         <View
           style={[
             styles.activeDot,
@@ -93,6 +95,14 @@ export function DriverDetailCard({
         label="Total salary"
         value={formatCurrency(balance.totalSalary)}
       />
+      {balance.fuelDeduction.amount > 0 ? (
+        <DetailRow
+          label={`Extra fuel (${
+            balance.fuelDeduction.extraLitres
+          } L × ${formatCurrency(balance.fuelDeduction.ratePerLitre)})`}
+          value={`- ${formatCurrency(balance.fuelDeduction.amount)}`}
+        />
+      ) : null}
       <DetailRow label="Advance Money" value={formatCurrency(advanceMoney)} />
       <DetailRow
         label="Paid this month"
@@ -156,6 +166,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs / 2,
   },
   activeDot: {
+    marginLeft: spacing.sm,
     width: 10,
     height: 10,
     borderRadius: radii.pill,

@@ -8,8 +8,8 @@ import { Shimmer } from '@/components/Shimmer';
 import { fetchAllDailyEntries } from '@/services/dailyEntryService';
 import { fetchAllOwnerDriverAdvances } from '@/services/driverAdvanceService';
 import {
-  computeDriverBalance,
-  type DriverBalanceSummary,
+  computeAllDriverBalances,
+  type DriverBalanceRow,
 } from '@/services/driverBalanceService';
 import { fetchAllOwnerDriverPayments } from '@/services/driverPaymentService';
 import { fetchDrivers } from '@/services/driverService';
@@ -26,36 +26,7 @@ import type { Driver } from '@/types/driver';
 import type { DriverAdvance } from '@/types/driverAdvance';
 import type { DriverPayment } from '@/types/driverPayment';
 
-interface DriverPaymentRowData {
-  driverId: string;
-  driverName: string;
-  isDeleted: boolean;
-  balance: DriverBalanceSummary;
-  payments: DriverPayment[];
-}
-
 const SKELETON_ROW_COUNT = 6;
-
-function groupByDriver<T extends { driverId: string }>(
-  records: T[],
-): Map<string, T[]> {
-  const grouped = new Map<string, T[]>();
-  records.forEach(record => {
-    const existing = grouped.get(record.driverId);
-    if (existing === undefined) {
-      grouped.set(record.driverId, [record]);
-    } else {
-      existing.push(record);
-    }
-  });
-  return grouped;
-}
-
-function formatRemaining(amount: number): string {
-  return amount < 0
-    ? `${formatCurrency(Math.abs(amount))} (excess)`
-    : formatCurrency(amount);
-}
 
 interface PaymentDetailsData {
   drivers: Driver[];
@@ -64,83 +35,11 @@ interface PaymentDetailsData {
   payments: DriverPayment[];
 }
 
-interface PaymentDriverSource {
-  id: string;
-  name: string;
-  dailyRate: number;
-  isDeleted: boolean;
-}
-
-function buildDriverSources(
-  data: PaymentDetailsData,
-  entriesByDriver: Map<string, DailyEntry[]>,
-  advancesByDriver: Map<string, DriverAdvance[]>,
-  paymentsByDriver: Map<string, DriverPayment[]>,
-): PaymentDriverSource[] {
-  const liveSources = data.drivers.map(driver => ({
-    id: driver.id,
-    name: driver.name,
-    dailyRate: driver.dailyRate,
-    isDeleted: false,
-  }));
-  const liveIds = new Set(liveSources.map(source => source.id));
-  const deletedIds = new Set<string>();
-  [entriesByDriver, advancesByDriver, paymentsByDriver].forEach(grouped => {
-    grouped.forEach((_, driverId) => {
-      if (!liveIds.has(driverId)) {
-        deletedIds.add(driverId);
-      }
-    });
-  });
-
-  const deletedSources = Array.from(deletedIds).map(driverId => {
-    const driverEntries = entriesByDriver.get(driverId) ?? [];
-    const latestEntry = [...driverEntries].sort((first, second) =>
-      second.date.localeCompare(first.date),
-    )[0];
-    return {
-      id: driverId,
-      name: latestEntry?.driverName ?? 'Unknown driver',
-      dailyRate: latestEntry?.dailyRate ?? 0,
-      isDeleted: true,
-    };
-  });
-
-  return [...liveSources, ...deletedSources];
-}
-
 function buildRows(
   data: PaymentDetailsData,
   selectedMonth: string,
-): DriverPaymentRowData[] {
-  const entriesByDriver = groupByDriver(data.entries);
-  const advancesByDriver = groupByDriver(data.advances);
-  const paymentsByDriver = groupByDriver(data.payments);
-
-  return buildDriverSources(
-    data,
-    entriesByDriver,
-    advancesByDriver,
-    paymentsByDriver,
-  )
-    .map((driver): DriverPaymentRowData => {
-      const driverPayments = paymentsByDriver.get(driver.id) ?? [];
-      return {
-        driverId: driver.id,
-        driverName: driver.name,
-        isDeleted: driver.isDeleted,
-        balance: computeDriverBalance(
-          selectedMonth,
-          driver.dailyRate,
-          entriesByDriver.get(driver.id) ?? [],
-          advancesByDriver.get(driver.id) ?? [],
-          driverPayments,
-        ),
-        payments: driverPayments.filter(
-          payment => payment.month === selectedMonth,
-        ),
-      };
-    })
+): DriverBalanceRow[] {
+  return computeAllDriverBalances(selectedMonth, data.drivers, data)
     .filter(
       row =>
         row.balance.totalSalary !== 0 ||
@@ -148,6 +47,12 @@ function buildRows(
         row.payments.length > 0,
     )
     .sort((first, second) => first.driverName.localeCompare(second.driverName));
+}
+
+function formatRemaining(amount: number): string {
+  return amount < 0
+    ? `${formatCurrency(Math.abs(amount))} (excess)`
+    : formatCurrency(amount);
 }
 
 export function DriverPaymentDetailsScreen() {

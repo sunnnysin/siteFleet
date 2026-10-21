@@ -8,7 +8,26 @@ function buildEntries(month: string, daysPresent: number): DailyEntry[] {
     month,
     date: `${month}-${String(index + 1).padStart(2, '0')}`,
     attendance: 'present',
+    fuelLitres: 0,
+    routeFuelLitres: 0,
+    fuelCost: 0,
   })) as DailyEntry[];
+}
+
+function buildFuelEntry(
+  month: string,
+  fuelLitres: number,
+  routeFuelLitres: number,
+  pricePerLitre: number,
+): DailyEntry {
+  return {
+    month,
+    date: `${month}-15`,
+    attendance: 'present',
+    fuelLitres,
+    routeFuelLitres,
+    fuelCost: fuelLitres * pricePerLitre,
+  } as DailyEntry;
 }
 
 function buildPayment(month: string, amount: number): DriverPayment {
@@ -81,5 +100,68 @@ describe('computeDriverBalance', () => {
 
     expect(balance.paidTotal).toBe(0);
     expect(balance.remaining).toBe(2000);
+  });
+
+  it('deducts extra fuel taken at the diesel rate from the salary', () => {
+    const entries = [
+      ...buildEntries('2026-06', 20),
+      buildFuelEntry('2026-06', 10, 2, 90),
+    ];
+
+    const balance = computeDriverBalance('2026-06', 420, entries, [], []);
+
+    expect(balance.fuelDeduction.extraLitres).toBe(8);
+    expect(balance.fuelDeduction.ratePerLitre).toBe(90);
+    expect(balance.fuelDeduction.amount).toBe(720);
+    expect(balance.totalSalary).toBe(8820);
+    expect(balance.remaining).toBe(8100);
+  });
+
+  it('does not deduct anything when the driver took less fuel than needed', () => {
+    const entries = [
+      ...buildEntries('2026-06', 5),
+      buildFuelEntry('2026-06', 0, 2, 90),
+    ];
+
+    const balance = computeDriverBalance('2026-06', 400, entries, [], []);
+
+    expect(balance.fuelDeduction.amount).toBe(0);
+  });
+
+  it('marks the month paid once nothing remains and unpaid otherwise', () => {
+    const entries = buildEntries('2026-06', 10);
+
+    const partial = computeDriverBalance(
+      '2026-06',
+      400,
+      entries,
+      [],
+      [buildPayment('2026-06', 3000)],
+    );
+    const full = computeDriverBalance(
+      '2026-06',
+      400,
+      entries,
+      [],
+      [buildPayment('2026-06', 3000), buildPayment('2026-06', 1000)],
+    );
+    const nothing = computeDriverBalance('2026-06', 400, [], [], []);
+
+    expect(partial.isFullyPaid).toBe(false);
+    expect(full.isFullyPaid).toBe(true);
+    expect(nothing.isFullyPaid).toBe(false);
+  });
+
+  it('carries earlier fuel deductions into the next month', () => {
+    const entries = [
+      ...buildEntries('2026-06', 10),
+      buildFuelEntry('2026-06', 6, 2, 100),
+      ...buildEntries('2026-07', 10),
+    ];
+
+    const july = computeDriverBalance('2026-07', 400, entries, [], []);
+
+    expect(july.carriedForward).toBe(4000);
+    expect(july.remaining).toBe(8000);
   });
 });
