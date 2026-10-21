@@ -2,6 +2,8 @@ import { generatePDF } from 'react-native-html-to-pdf';
 import Share from 'react-native-share';
 import { formatCurrency } from '@/utils/currencyUtils';
 import { formatDisplayDate } from '@/utils/dateUtils';
+import type { DriverBalanceSummary } from '@/services/driverBalanceService';
+import type { DriverPayment } from '@/types/driverPayment';
 import type { Driver } from '@/types/driver';
 import type { DailyEntry, PaymentStatus } from '@/types/dailyEntry';
 
@@ -36,6 +38,8 @@ function buildReportHtml(
   fuelBalance: number,
   advanceTotal: number,
   monthlyPaymentStatus: PaymentStatus | null,
+  payments: DriverPayment[],
+  balance: DriverBalanceSummary,
 ): string {
   const daysPresent = entries.filter(
     entry => entry.attendance === 'present',
@@ -44,7 +48,6 @@ function buildReportHtml(
     (sum, entry) => sum + computeDriverPayForReport(entry, driver),
     0,
   );
-  const netAmountDue = totalDriverPay - advanceTotal;
   const totalUnpaid = entries
     .filter(
       entry =>
@@ -78,6 +81,25 @@ function buildReportHtml(
     )
     .join('');
 
+  const paymentRows = payments
+    .map(
+      payment => `
+        <tr>
+          <td>${formatDisplayDate(payment.date)}</td>
+          <td>${formatCurrency(payment.amount)}</td>
+        </tr>`,
+    )
+    .join('');
+
+  const carriedForwardLabel =
+    balance.carriedForward < 0
+      ? `${formatCurrency(Math.abs(balance.carriedForward))} (excess paid)`
+      : formatCurrency(balance.carriedForward);
+  const remainingLabel =
+    balance.remaining < 0
+      ? `${formatCurrency(Math.abs(balance.remaining))} (excess paid)`
+      : formatCurrency(balance.remaining);
+
   return `
     <html>
       <head>
@@ -93,7 +115,8 @@ function buildReportHtml(
           th { background: #F5F6FA; }
           .summary { margin-top: 20px; font-size: 13px; }
           .summary div { margin-bottom: 4px; }
-          .summary strong { display: inline-block; width: 220px; }
+          .summary strong { display: inline-block; width: 280px; }
+          .payments { width: 60%; }
         </style>
       </head>
       <body>
@@ -136,6 +159,19 @@ function buildReportHtml(
             }
           </tbody>
         </table>
+        ${
+          payments.length > 0
+            ? `<table class="payments">
+          <thead>
+            <tr>
+              <th>Payment date</th>
+              <th>Amount paid</th>
+            </tr>
+          </thead>
+          <tbody>${paymentRows}</tbody>
+        </table>`
+            : ''
+        }
         <div class="summary">
           <div><strong>Days present:</strong> ${daysPresent}</div>
           <div><strong>Total driver pay:</strong> ${formatCurrency(
@@ -144,9 +180,11 @@ function buildReportHtml(
           <div><strong>Advance taken this month:</strong> ${formatCurrency(
             advanceTotal,
           )}</div>
-          <div><strong>Net amount due:</strong> ${formatCurrency(
-            netAmountDue,
+          <div><strong>Paid this month:</strong> ${formatCurrency(
+            balance.paidTotal,
           )}</div>
+          <div><strong>Carried forward from earlier months:</strong> ${carriedForwardLabel}</div>
+          <div><strong>Remaining balance:</strong> ${remainingLabel}</div>
           <div><strong>Unpaid amount:</strong> ${formatCurrency(
             totalUnpaid,
           )}</div>
@@ -168,6 +206,8 @@ export async function shareDriverMonthlyReport(
   fuelBalance: number,
   advanceTotal: number,
   monthlyPaymentStatus: PaymentStatus | null,
+  payments: DriverPayment[],
+  balance: DriverBalanceSummary,
 ): Promise<void> {
   const html = buildReportHtml(
     driver,
@@ -177,6 +217,8 @@ export async function shareDriverMonthlyReport(
     fuelBalance,
     advanceTotal,
     monthlyPaymentStatus,
+    payments,
+    balance,
   );
   const fileName = `${driver.name.replace(/\s+/g, '_')}_${monthLabel.replace(
     /\s+/g,

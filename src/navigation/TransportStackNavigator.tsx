@@ -4,6 +4,7 @@ import { DriverListScreen } from '@/screens/transport/DriverListScreen';
 import { DriverDetailScreen } from '@/screens/transport/DriverDetailScreen';
 import { AddEditDriverScreen } from '@/screens/transport/AddEditDriverScreen';
 import { AddDriverAdvanceScreen } from '@/screens/transport/AddDriverAdvanceScreen';
+import { AddDriverPaymentScreen } from '@/screens/transport/AddDriverPaymentScreen';
 import { RouteListScreen } from '@/screens/transport/RouteListScreen';
 import { AddEditRouteScreen } from '@/screens/transport/AddEditRouteScreen';
 import { FuelPriceScreen } from '@/screens/transport/FuelPriceScreen';
@@ -12,6 +13,7 @@ import { DieselDistributionScreen } from '@/screens/transport/DieselDistribution
 import { DailyEntryListScreen } from '@/screens/transport/DailyEntryListScreen';
 import { AddEditDailyEntryScreen } from '@/screens/transport/AddEditDailyEntryScreen';
 import { MonthlyPaymentScreen } from '@/screens/transport/MonthlyPaymentScreen';
+import { DriverPaymentDetailsScreen } from '@/screens/transport/DriverPaymentDetailsScreen';
 import { SummaryScreen } from '@/screens/transport/SummaryScreen';
 import { BillScreen } from '@/screens/transport/BillScreen';
 import { GoraulSummaryScreen } from '@/screens/transport/GoraulSummaryScreen';
@@ -48,6 +50,11 @@ export function TransportStackNavigator() {
         name="AddDriverAdvance"
         component={AddDriverAdvanceScreen}
         options={{ title: 'Add Advance' }}
+      />
+      <Stack.Screen
+        name="AddDriverPayment"
+        component={AddDriverPaymentScreen}
+        options={{ title: 'Make Payment' }}
       />
       <Stack.Screen
         name="RouteList"
@@ -88,6 +95,11 @@ export function TransportStackNavigator() {
         name="MonthlyPayment"
         component={MonthlyPaymentScreen}
         options={{ title: 'Monthly Payments' }}
+      />
+      <Stack.Screen
+        name="DriverPaymentDetails"
+        component={DriverPaymentDetailsScreen}
+        options={{ title: 'Driver Payment Details' }}
       />
       <Stack.Screen
         name="Summary"

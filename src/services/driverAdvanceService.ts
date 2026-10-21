@@ -63,3 +63,31 @@ export function computeTotalAdvance(advances: DriverAdvance[]): number {
     advances.reduce((sum, advance) => sum + advance.amount, 0),
   );
 }
+
+export async function fetchAllDriverAdvances(
+  driverId: string,
+): Promise<DriverAdvance[]> {
+  const advances = await queryCollection<DriverAdvance>(
+    FIRESTORE_COLLECTIONS.driverAdvances,
+    [
+      where('ownerId', '==', getCurrentUserId()),
+      where('driverId', '==', driverId),
+    ],
+  );
+  return [...advances].sort((first, second) =>
+    first.date.localeCompare(second.date),
+  );
+}
+
+export async function fetchAllOwnerDriverAdvances(): Promise<DriverAdvance[]> {
+  return queryCollection<DriverAdvance>(FIRESTORE_COLLECTIONS.driverAdvances, [
+    where('ownerId', '==', getCurrentUserId()),
+  ]);
+}
+
+export function filterAdvancesForMonth(
+  advances: DriverAdvance[],
+  monthKey: string,
+): DriverAdvance[] {
+  return advances.filter(advance => advance.month === monthKey);
+}

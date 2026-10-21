@@ -3,7 +3,7 @@ import { Shimmer } from '@/components/Shimmer';
 import { colors } from '@/theme/colors';
 import { radii, spacing } from '@/theme/spacing';
 
-const DETAIL_ROW_COUNT = 7;
+const DETAIL_ROW_COUNT = 10;
 
 export function DriverDetailCardSkeleton() {
   return (

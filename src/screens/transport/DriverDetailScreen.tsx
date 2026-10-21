@@ -7,6 +7,7 @@ import { DriverDetailCard } from '@/components/DriverDetailCard';
 import { DriverDetailCardSkeleton } from '@/components/DriverDetailCardSkeleton';
 import { DriverHistoryRow } from '@/components/DriverHistoryRow';
 import { DriverHistoryRowSkeleton } from '@/components/DriverHistoryRowSkeleton';
+import { DriverPaymentRow } from '@/components/DriverPaymentRow';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -14,12 +15,20 @@ import { Shimmer } from '@/components/Shimmer';
 import { deleteDriver, fetchDriverById } from '@/services/driverService';
 import {
   computeDriverFuelBalance,
-  fetchDailyEntriesForDriverAndMonth,
+  fetchAllDailyEntriesForDriver,
+  filterEntriesForMonth,
 } from '@/services/dailyEntryService';
 import {
   computeTotalAdvance,
-  fetchDriverAdvancesForMonth,
+  fetchAllDriverAdvances,
+  filterAdvancesForMonth,
 } from '@/services/driverAdvanceService';
+import { computeDriverBalance } from '@/services/driverBalanceService';
+import {
+  deleteDriverPayment,
+  fetchAllDriverPayments,
+  filterPaymentsForMonth,
+} from '@/services/driverPaymentService';
 import { fetchRouteById } from '@/services/routeService';
 import { shareDriverMonthlyReport } from '@/services/driverReportService';
 import { computeMonthlyPayments } from '@/services/paymentService';
@@ -33,6 +42,7 @@ import { format, parse } from 'date-fns';
 import type { TransportStackParamList } from '@/navigation/types';
 import type { Driver } from '@/types/driver';
 import type { DriverAdvance } from '@/types/driverAdvance';
+import type { DriverPayment } from '@/types/driverPayment';
 import type { DailyEntry, PaymentStatus } from '@/types/dailyEntry';
 
 type HistoryRowItem =
@@ -57,8 +67,12 @@ export function DriverDetailScreen({
   const [driver, setDriver] = useState<Driver | null>(null);
   const [routeLabel, setRouteLabel] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey());
-  const [entries, setEntries] = useState<DailyEntry[]>([]);
-  const [advances, setAdvances] = useState<DriverAdvance[]>([]);
+  const [allEntries, setAllEntries] = useState<DailyEntry[]>([]);
+  const [allAdvances, setAllAdvances] = useState<DriverAdvance[]>([]);
+  const [allPayments, setAllPayments] = useState<DriverPayment[]>([]);
+  const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(
+    null,
+  );
   const [fuelBalance, setFuelBalance] = useState(0);
   const [monthlyPaymentStatus, setMonthlyPaymentStatus] =
     useState<PaymentStatus | null>(null);
@@ -79,28 +93,39 @@ export function DriverDetailScreen({
         setErrorMessage('Driver not found.');
         return;
       }
-      const [fetchedRoute, fetchedEntries, fetchedAdvances, monthlyPayments] =
-        await Promise.all([
-          fetchedDriver.routeId.length > 0
-            ? fetchRouteById(fetchedDriver.routeId)
-            : Promise.resolve(null),
-          fetchDailyEntriesForDriverAndMonth(driverId, selectedMonth),
-          fetchDriverAdvancesForMonth(driverId, selectedMonth),
-          computeMonthlyPayments(selectedMonth),
-        ]);
+      const [
+        fetchedRoute,
+        fetchedEntries,
+        fetchedAdvances,
+        fetchedPayments,
+        monthlyPayments,
+      ] = await Promise.all([
+        fetchedDriver.routeId.length > 0
+          ? fetchRouteById(fetchedDriver.routeId)
+          : Promise.resolve(null),
+        fetchAllDailyEntriesForDriver(driverId),
+        fetchAllDriverAdvances(driverId),
+        fetchAllDriverPayments(driverId),
+        computeMonthlyPayments(selectedMonth),
+      ]);
       setDriver(fetchedDriver);
       setRouteLabel(
         fetchedDriver.routeId.length > 0
           ? fetchedRoute?.name ?? 'Unknown route'
           : 'Undecided',
       );
-      setEntries(fetchedEntries);
-      setAdvances(fetchedAdvances);
+      setAllEntries(fetchedEntries);
+      setAllAdvances(fetchedAdvances);
+      setAllPayments(fetchedPayments);
       setMonthlyPaymentStatus(
         monthlyPayments.find(payment => payment.driverId === driverId)
           ?.paymentStatus ?? null,
       );
-      setFuelBalance(computeDriverFuelBalance(fetchedEntries));
+      setFuelBalance(
+        computeDriverFuelBalance(
+          filterEntriesForMonth(fetchedEntries, selectedMonth),
+        ),
+      );
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to load driver.',
@@ -151,6 +176,40 @@ export function DriverDetailScreen({
     }
   }
 
+  function handleDeletePayment(payment: DriverPayment): void {
+    Alert.alert(
+      'Delete payment',
+      `Remove the ${formatCurrency(payment.amount)} payment from ${format(
+        parse(payment.date, 'yyyy-MM-dd', new Date()),
+        'dd MMM yyyy',
+      )}? The remaining balance will increase.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => void confirmDeletePayment(payment.id),
+        },
+      ],
+    );
+  }
+
+  async function confirmDeletePayment(paymentId: string): Promise<void> {
+    setDeletingPaymentId(paymentId);
+    try {
+      await deleteDriverPayment(paymentId);
+      setAllPayments(previous =>
+        previous.filter(payment => payment.id !== paymentId),
+      );
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Failed to delete payment.',
+      );
+    } finally {
+      setDeletingPaymentId(null);
+    }
+  }
+
   async function handleExport(): Promise<void> {
     if (driver === null) {
       return;
@@ -170,6 +229,8 @@ export function DriverDetailScreen({
         fuelBalance,
         advanceTotal,
         monthlyPaymentStatus,
+        payments,
+        balance,
       );
     } catch (error) {
       setExportErrorMessage(
@@ -193,8 +254,7 @@ export function DriverDetailScreen({
           <DriverDetailCardSkeleton />
           <View style={styles.actionsRow}>
             <Shimmer style={styles.actionButtonSkeleton} />
-          </View>
-          <View style={styles.actionsRow}>
+            <Shimmer style={styles.actionButtonSkeleton} />
             <Shimmer style={styles.actionButtonSkeleton} />
           </View>
 
@@ -229,6 +289,9 @@ export function DriverDetailScreen({
     );
   }
 
+  const entries = filterEntriesForMonth(allEntries, selectedMonth);
+  const advances = filterAdvancesForMonth(allAdvances, selectedMonth);
+  const payments = filterPaymentsForMonth(allPayments, selectedMonth);
   const totalMonthlyPay = entries.reduce(
     (sum, entry) =>
       sum + (entry.attendance === 'present' ? driver.dailyRate : 0),
@@ -239,6 +302,13 @@ export function DriverDetailScreen({
     0,
   );
   const advanceTotal = computeTotalAdvance(advances);
+  const balance = computeDriverBalance(
+    selectedMonth,
+    driver.dailyRate,
+    allEntries,
+    allAdvances,
+    allPayments,
+  );
 
   const advanceAmountByDate = new Map(
     advances.map(advance => [advance.date, advance.amount]),
@@ -280,6 +350,7 @@ export function DriverDetailScreen({
           monthlyFuelTaken={totalMonthlyFuel}
           fuelBalance={fuelBalance}
           advanceMoney={advanceTotal}
+          balance={balance}
           onEdit={() => navigation.navigate('AddEditDriver', { driverId })}
         />
         <View style={styles.actionsRow}>
@@ -290,16 +361,25 @@ export function DriverDetailScreen({
                 navigation.navigate('AddDriverAdvance', { driverId })
               }
               variant="secondary"
+              size="small"
             />
           </View>
-        </View>
-        <View style={styles.actionsRow}>
+          <View style={styles.actionButton}>
+            <PrimaryButton
+              label="Make payment"
+              onPress={() =>
+                navigation.navigate('AddDriverPayment', { driverId })
+              }
+              size="small"
+            />
+          </View>
           <View style={styles.actionButton}>
             <PrimaryButton
               label="Delete driver"
               onPress={handleDelete}
               variant="danger"
               isLoading={isDeleting}
+              size="small"
             />
           </View>
         </View>
@@ -336,6 +416,28 @@ export function DriverDetailScreen({
             )}
           </View>
         )}
+
+        {payments.length > 0 ? (
+          <>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>Payments</Text>
+              <Text style={styles.monthlyTotal}>
+                {formatCurrency(balance.paidTotal)}
+              </Text>
+            </View>
+            <View style={styles.cardContainer}>
+              {payments.map((payment, index) => (
+                <DriverPaymentRow
+                  key={payment.id}
+                  payment={payment}
+                  onDelete={() => handleDeletePayment(payment)}
+                  isDeleting={deletingPaymentId === payment.id}
+                  isLast={index === payments.length - 1}
+                />
+              ))}
+            </View>
+          </>
+        ) : null}
       </ScrollView>
 
       <View style={styles.footer}>
@@ -365,13 +467,16 @@ const styles = StyleSheet.create({
     marginHorizontal: -spacing.lg,
   },
   actionsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
     marginTop: spacing.md,
   },
   actionButton: {
-    alignSelf: 'stretch',
+    flex: 1,
   },
   actionButtonSkeleton: {
-    height: 48,
+    flex: 1,
+    height: 40,
     borderRadius: radii.md,
   },
   sectionTitleRow: {
