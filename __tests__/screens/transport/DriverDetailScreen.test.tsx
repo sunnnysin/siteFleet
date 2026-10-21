@@ -30,12 +30,20 @@ jest.mock('@/services/driverService', () => ({
 
 jest.mock('@/services/dailyEntryService', () => ({
   computeDriverFuelBalance: jest.fn().mockReturnValue(0),
-  fetchDailyEntriesForDriverAndMonth: jest.fn().mockResolvedValue([]),
+  fetchAllDailyEntriesForDriver: jest.fn().mockResolvedValue([]),
+  filterEntriesForMonth: jest.fn().mockReturnValue([]),
 }));
 
 jest.mock('@/services/driverAdvanceService', () => ({
   computeTotalAdvance: jest.fn().mockReturnValue(0),
-  fetchDriverAdvancesForMonth: jest.fn().mockResolvedValue([]),
+  fetchAllDriverAdvances: jest.fn().mockResolvedValue([]),
+  filterAdvancesForMonth: jest.fn().mockReturnValue([]),
+}));
+
+jest.mock('@/services/driverPaymentService', () => ({
+  deleteDriverPayment: jest.fn(),
+  fetchAllDriverPayments: jest.fn().mockResolvedValue([]),
+  filterPaymentsForMonth: jest.fn().mockReturnValue([]),
 }));
 
 jest.mock('@/services/routeService', () => ({
@@ -54,9 +62,7 @@ describe('DriverDetailScreen', () => {
   it('renders without throwing and shows the monthly history section', async () => {
     const renderer = await renderScreen(
       <DriverDetailScreen
-        navigation={
-          createNavigationMock() as unknown as Props['navigation']
-        }
+        navigation={createNavigationMock() as unknown as Props['navigation']}
         route={
           createRouteMock({ driverId: 'driver-1' }) as unknown as Props['route']
         }

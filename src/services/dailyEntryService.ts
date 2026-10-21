@@ -88,6 +88,34 @@ export async function fetchDailyEntriesForDriverAndMonth(
   );
 }
 
+export async function fetchAllDailyEntriesForDriver(
+  driverId: string,
+): Promise<DailyEntry[]> {
+  const entries = await queryCollection<DailyEntry>(
+    FIRESTORE_COLLECTIONS.dailyEntries,
+    [
+      where('ownerId', '==', getCurrentUserId()),
+      where('driverId', '==', driverId),
+    ],
+  );
+  return [...entries].sort((first, second) =>
+    first.date.localeCompare(second.date),
+  );
+}
+
+export async function fetchAllDailyEntries(): Promise<DailyEntry[]> {
+  return queryCollection<DailyEntry>(FIRESTORE_COLLECTIONS.dailyEntries, [
+    where('ownerId', '==', getCurrentUserId()),
+  ]);
+}
+
+export function filterEntriesForMonth(
+  entries: DailyEntry[],
+  monthKey: string,
+): DailyEntry[] {
+  return entries.filter(entry => entry.month === monthKey);
+}
+
 export async function fetchDailyEntry(
   date: string,
   driverId: string,

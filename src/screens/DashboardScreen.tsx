@@ -281,6 +281,10 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
           <NavigationTile
             label="Drivers Salary Payment"
             onPress={() => navigation.navigate('MonthlyPayment')}
+          />
+          <NavigationTile
+            label="Driver Payment Details"
+            onPress={() => navigation.navigate('DriverPaymentDetails')}
             isLast
           />
         </View>

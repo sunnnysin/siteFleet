@@ -3,6 +3,7 @@ import { colors } from '@/theme/colors';
 import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { formatCurrency } from '@/utils/currencyUtils';
+import type { DriverBalanceSummary } from '@/services/driverBalanceService';
 import type { Driver } from '@/types/driver';
 
 interface DriverDetailCardProps {
@@ -11,6 +12,7 @@ interface DriverDetailCardProps {
   monthlyFuelTaken: number;
   fuelBalance: number;
   advanceMoney: number;
+  balance: DriverBalanceSummary;
   onEdit: () => void;
 }
 
@@ -34,12 +36,19 @@ function formatFuelAmount(litres: number): string {
     : `${Math.abs(litres)} L ${litres > 0 ? '(credit)' : '(fuel due)'}`;
 }
 
+function formatSignedBalance(amount: number): string {
+  return amount < 0
+    ? `${formatCurrency(Math.abs(amount))} (excess paid)`
+    : formatCurrency(amount);
+}
+
 export function DriverDetailCard({
   driver,
   routeLabel,
   monthlyFuelTaken,
   fuelBalance,
   advanceMoney,
+  balance,
   onEdit,
 }: DriverDetailCardProps) {
   return (
@@ -80,7 +89,27 @@ export function DriverDetailCard({
         value={`${monthlyFuelTaken} L`}
       />
       <DetailRow label="Fuel balance" value={formatFuelAmount(fuelBalance)} />
+      <DetailRow
+        label="Total salary"
+        value={formatCurrency(balance.totalSalary)}
+      />
       <DetailRow label="Advance Money" value={formatCurrency(advanceMoney)} />
+      <DetailRow
+        label="Paid this month"
+        value={formatCurrency(balance.paidTotal)}
+      />
+      {balance.carriedForward !== 0 ? (
+        <DetailRow
+          label="Carried forward"
+          value={formatSignedBalance(balance.carriedForward)}
+        />
+      ) : null}
+      <View style={styles.row}>
+        <Text style={styles.remainingLabel}>Remaining</Text>
+        <Text style={styles.remainingValue}>
+          {formatSignedBalance(balance.remaining)}
+        </Text>
+      </View>
 
       <View style={styles.footer}>
         <TouchableOpacity
@@ -155,6 +184,16 @@ const styles = StyleSheet.create({
   rowValue: {
     ...typography.body,
     color: colors.textPrimary,
+  },
+  remainingLabel: {
+    ...typography.label,
+    color: colors.textPrimary,
+    fontWeight: '700',
+  },
+  remainingValue: {
+    ...typography.body,
+    color: colors.textPrimary,
+    fontWeight: '700',
   },
   footer: {
     marginTop: spacing.md,

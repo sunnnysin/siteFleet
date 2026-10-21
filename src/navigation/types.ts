@@ -15,6 +15,7 @@ export type TransportStackParamList = {
   DriverDetail: { driverId: string };
   AddEditDriver: { driverId?: string };
   AddDriverAdvance: { driverId: string };
+  AddDriverPayment: { driverId: string };
   RouteList: undefined;
   AddEditRoute: { routeId?: string };
   FuelPrice: undefined;
@@ -23,6 +24,7 @@ export type TransportStackParamList = {
   DailyEntryList: undefined;
   AddEditDailyEntry: { date: string; driverId?: string };
   MonthlyPayment: undefined;
+  DriverPaymentDetails: undefined;
   Summary: undefined;
   Bill: undefined;
   GoraulSummary: undefined;
