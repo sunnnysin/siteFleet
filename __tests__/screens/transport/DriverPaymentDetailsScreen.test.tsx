@@ -12,6 +12,9 @@ jest.mock('@/services/driverService', () => ({
 }));
 
 jest.mock('@/services/dailyEntryService', () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    '@/services/dailyEntryService',
+  ),
   fetchAllDailyEntries: jest.fn().mockResolvedValue([
     {
       driverId: 'deleted-driver',
@@ -20,6 +23,9 @@ jest.mock('@/services/dailyEntryService', () => ({
       month: new Date().toISOString().slice(0, 7),
       date: new Date().toISOString().slice(0, 10),
       attendance: 'present',
+      fuelLitres: 0,
+      routeFuelLitres: 0,
+      fuelCost: 0,
     },
   ]),
 }));

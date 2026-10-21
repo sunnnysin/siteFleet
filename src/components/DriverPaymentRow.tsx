@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import deleteIcon from '@/assets/delete.png';
 import { formatCurrency } from '@/utils/currencyUtils';
@@ -16,6 +16,7 @@ import type { DriverPayment } from '@/types/driverPayment';
 
 interface DriverPaymentRowProps {
   payment: DriverPayment;
+  onEdit: () => void;
   onDelete: () => void;
   isDeleting: boolean;
   isLast?: boolean;
@@ -23,6 +24,7 @@ interface DriverPaymentRowProps {
 
 export function DriverPaymentRow({
   payment,
+  onEdit,
   onDelete,
   isDeleting,
   isLast = false,
@@ -33,6 +35,14 @@ export function DriverPaymentRow({
         {formatDisplayDateWithWeekday(payment.date)}
       </Text>
       <Text style={styles.amount}>{formatCurrency(payment.amount)}</Text>
+      <TouchableOpacity
+        style={styles.editButton}
+        onPress={onEdit}
+        hitSlop={8}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.editLabel}>Edit</Text>
+      </TouchableOpacity>
       <TouchableOpacity
         onPress={onDelete}
         disabled={isDeleting}
@@ -76,6 +86,17 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.success,
     fontWeight: '600',
+  },
+  editButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs / 2,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  editLabel: {
+    ...typography.label,
+    color: colors.primary,
   },
   deleteIcon: {
     width: 22,

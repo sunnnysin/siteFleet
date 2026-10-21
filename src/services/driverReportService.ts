@@ -95,6 +95,11 @@ function buildReportHtml(
     balance.carriedForward < 0
       ? `${formatCurrency(Math.abs(balance.carriedForward))} (excess paid)`
       : formatCurrency(balance.carriedForward);
+  const paymentStatusLabel = balance.isFullyPaid
+    ? 'Paid'
+    : balance.paidTotal > 0 || balance.advanceTotal > 0
+    ? 'Partially paid'
+    : 'Unpaid';
   const remainingLabel =
     balance.remaining < 0
       ? `${formatCurrency(Math.abs(balance.remaining))} (excess paid)`
@@ -177,6 +182,17 @@ function buildReportHtml(
           <div><strong>Total driver pay:</strong> ${formatCurrency(
             totalDriverPay,
           )}</div>
+          ${
+            balance.fuelDeduction.amount > 0
+              ? `<div><strong>Extra fuel deduction (${
+                  balance.fuelDeduction.extraLitres
+                } L × ${formatCurrency(
+                  balance.fuelDeduction.ratePerLitre,
+                )}):</strong> - ${formatCurrency(
+                  balance.fuelDeduction.amount,
+                )}</div>`
+              : ''
+          }
           <div><strong>Advance taken this month:</strong> ${formatCurrency(
             advanceTotal,
           )}</div>
@@ -185,6 +201,7 @@ function buildReportHtml(
           )}</div>
           <div><strong>Carried forward from earlier months:</strong> ${carriedForwardLabel}</div>
           <div><strong>Remaining balance:</strong> ${remainingLabel}</div>
+          <div><strong>Payment status:</strong> ${paymentStatusLabel}</div>
           <div><strong>Unpaid amount:</strong> ${formatCurrency(
             totalUnpaid,
           )}</div>

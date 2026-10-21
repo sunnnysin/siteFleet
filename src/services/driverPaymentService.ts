@@ -45,6 +45,24 @@ export async function saveDriverPayment(
   return payment;
 }
 
+export async function updateDriverPayment(
+  payment: DriverPayment,
+  draft: { date: string; amount: number },
+): Promise<DriverPayment> {
+  const updated: DriverPayment = {
+    ...payment,
+    date: draft.date,
+    month: formatMonthKey(parseDateKey(draft.date)),
+    amount: roundToTwoDecimals(draft.amount),
+  };
+  await setDocumentById(
+    FIRESTORE_COLLECTIONS.driverPayments,
+    updated.id,
+    updated,
+  );
+  return updated;
+}
+
 export async function deleteDriverPayment(paymentId: string): Promise<void> {
   await deleteDocumentById(FIRESTORE_COLLECTIONS.driverPayments, paymentId);
 }

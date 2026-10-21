@@ -228,7 +228,7 @@ export function DriverDetailScreen({
         entries,
         fuelBalance,
         advanceTotal,
-        monthlyPaymentStatus,
+        balance.isFullyPaid ? 'paid' : monthlyPaymentStatus,
         payments,
         balance,
       );
@@ -368,7 +368,10 @@ export function DriverDetailScreen({
             <PrimaryButton
               label="Make payment"
               onPress={() =>
-                navigation.navigate('AddDriverPayment', { driverId })
+                navigation.navigate('AddDriverPayment', {
+                  driverId,
+                  month: selectedMonth,
+                })
               }
               size="small"
             />
@@ -430,6 +433,12 @@ export function DriverDetailScreen({
                 <DriverPaymentRow
                   key={payment.id}
                   payment={payment}
+                  onEdit={() =>
+                    navigation.navigate('AddDriverPayment', {
+                      driverId,
+                      paymentId: payment.id,
+                    })
+                  }
                   onDelete={() => handleDeletePayment(payment)}
                   isDeleting={deletingPaymentId === payment.id}
                   isLast={index === payments.length - 1}

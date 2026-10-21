@@ -13,6 +13,13 @@ import {
   fetchDrivers,
   updateDriver,
 } from '@/services/driverService';
+import { fetchAllDailyEntries } from '@/services/dailyEntryService';
+import { fetchAllOwnerDriverAdvances } from '@/services/driverAdvanceService';
+import {
+  computeAllDriverBalances,
+  type DriverBalanceSummary,
+} from '@/services/driverBalanceService';
+import { fetchAllOwnerDriverPayments } from '@/services/driverPaymentService';
 import {
   computeMonthlyPayments,
   markMonthlyPaymentPaid,
@@ -47,6 +54,9 @@ export function MonthlyPaymentScreen({
   const setSelectedMonth = useTransportStore(state => state.setSelectedMonth);
 
   const [payments, setPayments] = useState<MonthlyPayment[]>([]);
+  const [balanceByDriverId, setBalanceByDriverId] = useState<
+    Map<string, DriverBalanceSummary>
+  >(new Map());
   const [driverTypeByDriverId, setDriverTypeByDriverId] = useState<
     Map<string, DriverType>
   >(new Map());
@@ -75,11 +85,24 @@ export function MonthlyPaymentScreen({
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const [monthlyPayments, drivers] = await Promise.all([
-        computeMonthlyPayments(selectedMonth),
-        fetchDrivers(),
-      ]);
+      const [monthlyPayments, drivers, entries, advances, driverPayments] =
+        await Promise.all([
+          computeMonthlyPayments(selectedMonth),
+          fetchDrivers(),
+          fetchAllDailyEntries(),
+          fetchAllOwnerDriverAdvances(),
+          fetchAllOwnerDriverPayments(),
+        ]);
       setPayments(monthlyPayments);
+      setBalanceByDriverId(
+        new Map(
+          computeAllDriverBalances(selectedMonth, drivers, {
+            entries,
+            advances,
+            payments: driverPayments,
+          }).map(row => [row.driverId, row.balance]),
+        ),
+      );
       setDriverTypeByDriverId(
         new Map(drivers.map(driver => [driver.id, driver.driverType])),
       );
@@ -201,6 +224,26 @@ export function MonthlyPaymentScreen({
     }
   }
 
+  const displayPayments = payments.map(payment => {
+    const balance = balanceByDriverId.get(payment.driverId);
+    const isSettledByPayments =
+      payment.paymentStatus === 'unpaid' &&
+      payment.amountSettledSameDay === 0 &&
+      balance !== undefined;
+    if (!isSettledByPayments) {
+      return { payment, isAutoPaid: false };
+    }
+    return balance.isFullyPaid
+      ? {
+          payment: { ...payment, paymentStatus: 'paid' as const, amountDue: 0 },
+          isAutoPaid: true,
+        }
+      : {
+          payment: { ...payment, amountDue: Math.max(balance.remaining, 0) },
+          isAutoPaid: false,
+        };
+  });
+
   async function handleMarkPaid(payment: MonthlyPayment): Promise<void> {
     setProcessingPaymentId(payment.id);
     setErrorMessage(null);
@@ -270,23 +313,26 @@ export function MonthlyPaymentScreen({
         />
       ) : (
         <FlatList
-          data={payments}
-          keyExtractor={payment => payment.id}
+          data={displayPayments}
+          keyExtractor={item => item.payment.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
             <MonthlyPaymentRow
-              payment={item}
-              driverType={driverTypeByDriverId.get(item.driverId) ?? null}
-              isDriverDeleted={!driverTypeByDriverId.has(item.driverId)}
+              payment={item.payment}
+              driverType={
+                driverTypeByDriverId.get(item.payment.driverId) ?? null
+              }
+              isDriverDeleted={!driverTypeByDriverId.has(item.payment.driverId)}
+              canMarkUnpaid={!item.isAutoPaid}
               onPress={() =>
                 navigation.navigate('DriverDetail', {
-                  driverId: item.driverId,
+                  driverId: item.payment.driverId,
                 })
               }
-              onPay={() => void handlePay(item)}
-              onMarkPaid={() => void handleMarkPaid(item)}
-              onMarkUnpaid={() => void handleMarkUnpaid(item)}
-              isProcessing={processingPaymentId === item.id}
+              onPay={() => void handlePay(item.payment)}
+              onMarkPaid={() => void handleMarkPaid(item.payment)}
+              onMarkUnpaid={() => void handleMarkUnpaid(item.payment)}
+              isProcessing={processingPaymentId === item.payment.id}
             />
           )}
         />
