@@ -277,6 +277,7 @@ export function MonthlyPaymentScreen({
             <MonthlyPaymentRow
               payment={item}
               driverType={driverTypeByDriverId.get(item.driverId) ?? null}
+              isDriverDeleted={!driverTypeByDriverId.has(item.driverId)}
               onPress={() =>
                 navigation.navigate('DriverDetail', {
                   driverId: item.driverId,

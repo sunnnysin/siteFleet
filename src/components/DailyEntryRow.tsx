@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { DeletedBadge } from '@/components/DeletedBadge';
 import { DriverTypeBadge } from '@/components/DriverTypeBadge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { colors } from '@/theme/colors';
@@ -22,6 +23,7 @@ import type { DailyEntry } from '@/types/dailyEntry';
 
 interface DailyEntryRowProps {
   entry: DailyEntry;
+  isDriverDeleted: boolean;
   onPress: () => void;
   onSettleNow: () => void;
   isSettling: boolean;
@@ -31,6 +33,7 @@ interface DailyEntryRowProps {
 
 export function DailyEntryRow({
   entry,
+  isDriverDeleted,
   onPress,
   onSettleNow,
   isSettling,
@@ -46,7 +49,10 @@ export function DailyEntryRow({
           <StatusBadge status={entry.paymentStatus} />
         </View>
       </View>
-      <Text style={styles.driverName}>{entry.driverName}</Text>
+      <View style={styles.nameRow}>
+        <Text style={styles.driverName}>{entry.driverName}</Text>
+        {isDriverDeleted ? <DeletedBadge /> : null}
+      </View>
       <Text style={styles.meta}>
         {entry.vehicleType} · {entry.vehicleNumber}
       </Text>
@@ -134,6 +140,11 @@ const styles = StyleSheet.create({
   route: {
     ...typography.subheading,
     color: colors.primary,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   driverName: {
     ...typography.body,

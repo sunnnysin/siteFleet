@@ -6,6 +6,7 @@ export interface DieselDistributionLineItem {
   driverName: string;
   vehicleNumber: string;
   litres: number;
+  isDriverDeleted: boolean;
 }
 
 function buildReportHtml(
@@ -20,7 +21,9 @@ function buildReportHtml(
       (item, index) => `
         <tr>
           <td>${index + 1}</td>
-          <td class="driver-cell">${item.driverName}</td>
+          <td class="driver-cell">${item.driverName}${
+        item.isDriverDeleted ? ' (Deleted)' : ''
+      }</td>
           <td>${item.vehicleNumber}</td>
           <td>${item.litres} L</td>
         </tr>`,
