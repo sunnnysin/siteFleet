@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { DeletedBadge } from '@/components/DeletedBadge';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
 import { Shimmer } from '@/components/Shimmer';
@@ -28,6 +29,7 @@ import type { DriverPayment } from '@/types/driverPayment';
 interface DriverPaymentRowData {
   driverId: string;
   driverName: string;
+  isDeleted: boolean;
   balance: DriverBalanceSummary;
   payments: DriverPayment[];
 }
@@ -62,6 +64,51 @@ interface PaymentDetailsData {
   payments: DriverPayment[];
 }
 
+interface PaymentDriverSource {
+  id: string;
+  name: string;
+  dailyRate: number;
+  isDeleted: boolean;
+}
+
+function buildDriverSources(
+  data: PaymentDetailsData,
+  entriesByDriver: Map<string, DailyEntry[]>,
+  advancesByDriver: Map<string, DriverAdvance[]>,
+  paymentsByDriver: Map<string, DriverPayment[]>,
+): PaymentDriverSource[] {
+  const liveSources = data.drivers.map(driver => ({
+    id: driver.id,
+    name: driver.name,
+    dailyRate: driver.dailyRate,
+    isDeleted: false,
+  }));
+  const liveIds = new Set(liveSources.map(source => source.id));
+  const deletedIds = new Set<string>();
+  [entriesByDriver, advancesByDriver, paymentsByDriver].forEach(grouped => {
+    grouped.forEach((_, driverId) => {
+      if (!liveIds.has(driverId)) {
+        deletedIds.add(driverId);
+      }
+    });
+  });
+
+  const deletedSources = Array.from(deletedIds).map(driverId => {
+    const driverEntries = entriesByDriver.get(driverId) ?? [];
+    const latestEntry = [...driverEntries].sort((first, second) =>
+      second.date.localeCompare(first.date),
+    )[0];
+    return {
+      id: driverId,
+      name: latestEntry?.driverName ?? 'Unknown driver',
+      dailyRate: latestEntry?.dailyRate ?? 0,
+      isDeleted: true,
+    };
+  });
+
+  return [...liveSources, ...deletedSources];
+}
+
 function buildRows(
   data: PaymentDetailsData,
   selectedMonth: string,
@@ -70,12 +117,18 @@ function buildRows(
   const advancesByDriver = groupByDriver(data.advances);
   const paymentsByDriver = groupByDriver(data.payments);
 
-  return data.drivers
+  return buildDriverSources(
+    data,
+    entriesByDriver,
+    advancesByDriver,
+    paymentsByDriver,
+  )
     .map((driver): DriverPaymentRowData => {
       const driverPayments = paymentsByDriver.get(driver.id) ?? [];
       return {
         driverId: driver.id,
         driverName: driver.name,
+        isDeleted: driver.isDeleted,
         balance: computeDriverBalance(
           selectedMonth,
           driver.dailyRate,
@@ -199,9 +252,10 @@ export function DriverPaymentDetailsScreen() {
             {tableHeader}
             {rows.map(row => (
               <View key={row.driverId} style={styles.tableRow}>
-                <Text style={[styles.tableCell, styles.driverCell]}>
-                  {row.driverName}
-                </Text>
+                <View style={[styles.tableCell, styles.driverCell]}>
+                  <Text style={styles.driverNameText}>{row.driverName}</Text>
+                  {row.isDeleted ? <DeletedBadge /> : null}
+                </View>
                 <Text
                   style={[
                     styles.tableCell,
@@ -302,6 +356,11 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textPrimary,
     padding: spacing.sm,
+  },
+  driverNameText: {
+    ...typography.caption,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs / 2,
   },
   driverCell: {
     flex: 1.2,

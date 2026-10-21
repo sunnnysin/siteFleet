@@ -23,7 +23,7 @@ import {
 } from '@/services/dailyEntryService';
 import { fetchFuelPriceForDate } from '@/services/fuelPriceService';
 import { openUpiPayment } from '@/services/upiService';
-import { fetchDriverById } from '@/services/driverService';
+import { fetchDriverById, fetchDrivers } from '@/services/driverService';
 import { useTransportStore } from '@/stores/useTransportStore';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -55,6 +55,7 @@ export function DailyEntryListScreen({
   const setSelectedDate = useTransportStore(state => state.setSelectedDate);
 
   const [entries, setEntries] = useState<DailyEntry[]>([]);
+  const [liveDriverIds, setLiveDriverIds] = useState<Set<string>>(new Set());
   const [hasFuelPrice, setHasFuelPrice] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -72,10 +73,12 @@ export function DailyEntryListScreen({
       }
       setErrorMessage(null);
       try {
-        const [fetchedEntries, fuelPrice] = await Promise.all([
+        const [fetchedEntries, fuelPrice, drivers] = await Promise.all([
           fetchDailyEntriesForDate(selectedDate),
           fetchFuelPriceForDate(selectedDate),
+          fetchDrivers(),
         ]);
+        setLiveDriverIds(new Set(drivers.map(driver => driver.id)));
         setEntries(sortByRoute(fetchedEntries));
         setHasFuelPrice(fuelPrice !== null);
       } catch (error) {
@@ -234,6 +237,7 @@ export function DailyEntryListScreen({
             renderItem={({ item }) => (
               <DailyEntryRow
                 entry={item}
+                isDriverDeleted={!liveDriverIds.has(item.driverId)}
                 onPress={() =>
                   navigation.navigate('AddEditDailyEntry', {
                     date: selectedDate,

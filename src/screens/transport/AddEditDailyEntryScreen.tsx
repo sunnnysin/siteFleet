@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { DeletedBadge } from '@/components/DeletedBadge';
 import { EmptyState } from '@/components/EmptyState';
 import { FormFieldSkeleton } from '@/components/FormFieldSkeleton';
 import { FormTextInput } from '@/components/FormTextInput';
@@ -59,6 +60,7 @@ export function AddEditDailyEntryScreen({
   const [loadErrorMessage, setLoadErrorMessage] = useState<string | null>(null);
   const [availableDrivers, setAvailableDrivers] = useState<Driver[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [isLockedDriverDeleted, setIsLockedDriverDeleted] = useState(false);
   const [lockedDriver, setLockedDriver] =
     useState<DailyEntryDriverSource | null>(null);
   const [distributedLitresByDriverId, setDistributedLitresByDriverId] =
@@ -103,6 +105,7 @@ export function AddEditDailyEntryScreen({
           return;
         }
         const driver = fetchedDrivers.find(item => item.id === driverId);
+        setIsLockedDriverDeleted(driver === undefined);
         setLockedDriver(driver ?? buildFallbackDriverSource(existingEntry));
         setSelectedRouteId(
           fetchedRoutes.find(item => item.name === existingEntry.route)?.id ??
@@ -247,7 +250,10 @@ export function AddEditDailyEntryScreen({
         {isEditMode ? (
           <View style={styles.lockedDriverField}>
             <Text style={styles.lockedDriverLabel}>Driver</Text>
-            <Text style={styles.lockedDriverValue}>{lockedDriver?.name}</Text>
+            <View style={styles.lockedDriverNameRow}>
+              <Text style={styles.lockedDriverValue}>{lockedDriver?.name}</Text>
+              {isLockedDriverDeleted ? <DeletedBadge /> : null}
+            </View>
           </View>
         ) : (
           <SelectField
@@ -332,6 +338,11 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: '600',
     marginBottom: spacing.xs,
+  },
+  lockedDriverNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   lockedDriverValue: {
     color: colors.textPrimary,

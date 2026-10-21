@@ -12,7 +12,16 @@ jest.mock('@/services/driverService', () => ({
 }));
 
 jest.mock('@/services/dailyEntryService', () => ({
-  fetchAllDailyEntries: jest.fn().mockResolvedValue([]),
+  fetchAllDailyEntries: jest.fn().mockResolvedValue([
+    {
+      driverId: 'deleted-driver',
+      driverName: 'Gone Driver',
+      dailyRate: 300,
+      month: new Date().toISOString().slice(0, 7),
+      date: new Date().toISOString().slice(0, 10),
+      attendance: 'present',
+    },
+  ]),
 }));
 
 jest.mock('@/services/driverAdvanceService', () => ({
@@ -24,9 +33,10 @@ jest.mock('@/services/driverPaymentService', () => ({
 }));
 
 describe('DriverPaymentDetailsScreen', () => {
-  it('renders the empty state when no driver has salary or payments', async () => {
+  it('shows a deleted driver with a Deleted badge', async () => {
     const renderer = await renderScreen(<DriverPaymentDetailsScreen />);
 
-    expect(treeContainsText(renderer, 'No payment details')).toBe(true);
+    expect(treeContainsText(renderer, 'Gone Driver')).toBe(true);
+    expect(treeContainsText(renderer, 'Deleted')).toBe(true);
   });
 });

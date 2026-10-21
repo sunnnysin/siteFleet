@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { DeletedBadge } from '@/components/DeletedBadge';
 import { DriverTypeBadge } from '@/components/DriverTypeBadge';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -12,6 +13,7 @@ import type { MonthlyPayment } from '@/types/payment';
 interface MonthlyPaymentRowProps {
   payment: MonthlyPayment;
   driverType: DriverType | null;
+  isDriverDeleted: boolean;
   onPress: () => void;
   onPay: () => void;
   onMarkPaid: () => void;
@@ -22,6 +24,7 @@ interface MonthlyPaymentRowProps {
 export function MonthlyPaymentRow({
   payment,
   driverType,
+  isDriverDeleted,
   onPress,
   onPay,
   onMarkPaid,
@@ -29,13 +32,19 @@ export function MonthlyPaymentRow({
   isProcessing,
 }: MonthlyPaymentRowProps) {
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.row}
+      onPress={onPress}
+      disabled={isDriverDeleted}
+      activeOpacity={0.7}
+    >
       <View style={styles.header}>
         <View style={styles.nameRow}>
           <Text style={styles.driverName}>{payment.driverName}</Text>
           {driverType === 'temporary' ? (
             <DriverTypeBadge driverType="temporary" />
           ) : null}
+          {isDriverDeleted ? <DeletedBadge /> : null}
         </View>
         <StatusBadge status={payment.paymentStatus} />
       </View>
@@ -56,6 +65,7 @@ export function MonthlyPaymentRow({
               label="Pay via UPI"
               onPress={onPay}
               isLoading={isProcessing}
+              isDisabled={isDriverDeleted}
               size="small"
             />
           </View>

@@ -25,6 +25,7 @@ import {
 import { shareDieselDistributionReport } from '@/services/dieselDistributionReportService';
 import { todayKey } from '@/utils/dateUtils';
 import { colors } from '@/theme/colors';
+import { DeletedBadge } from '@/components/DeletedBadge';
 import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import type { Driver } from '@/types/driver';
@@ -46,6 +47,7 @@ function formatLitresForDisplay(value: number): string {
 export function DieselDistributionScreen() {
   const [selectedDate, setSelectedDate] = useState(todayKey());
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [liveDriverIds, setLiveDriverIds] = useState<Set<string>>(new Set());
   const [rows, setRows] = useState<DistributionRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -73,6 +75,7 @@ export function DieselDistributionScreen() {
         fetchDieselDistributionForDate(selectedDate),
       ]);
       setDrivers(fetchedDrivers.filter(driver => driver.isActive));
+      setLiveDriverIds(new Set(fetchedDrivers.map(driver => driver.id)));
       setRows(
         [...existingEntries]
           .sort((first, second) =>
@@ -206,6 +209,7 @@ export function DieselDistributionScreen() {
         driverName: row.driverName,
         vehicleNumber: row.vehicleNumber,
         litres: Number(row.litres) || 0,
+        isDriverDeleted: !liveDriverIds.has(row.driverId),
       }));
       await shareDieselDistributionReport(selectedDate, lineItems);
     } catch (error) {
@@ -333,7 +337,10 @@ export function DieselDistributionScreen() {
                   index === rows.length - 1 && styles.tableRowLast,
                 ]}
               >
-                <Text style={styles.tableCell}>{row.driverName}</Text>
+                <View style={[styles.tableCell, styles.driverNameCell]}>
+                  <Text style={styles.driverNameText}>{row.driverName}</Text>
+                  {!liveDriverIds.has(row.driverId) ? <DeletedBadge /> : null}
+                </View>
                 <Text style={[styles.tableCell, styles.center]}>
                   {row.vehicleNumber}
                 </Text>
@@ -497,6 +504,13 @@ const styles = StyleSheet.create({
   },
   tableRowLast: {
     borderBottomWidth: 0,
+  },
+  driverNameCell: {
+    gap: spacing.xs,
+  },
+  driverNameText: {
+    ...typography.body,
+    color: colors.textPrimary,
   },
   tableCell: {
     flex: 1,

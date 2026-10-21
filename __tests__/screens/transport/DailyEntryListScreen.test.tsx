@@ -8,10 +8,7 @@ import {
   treeContainsText,
 } from '../testUtils';
 
-type Props = NativeStackScreenProps<
-  TransportStackParamList,
-  'DailyEntryList'
->;
+type Props = NativeStackScreenProps<TransportStackParamList, 'DailyEntryList'>;
 
 jest.mock('react-native/Libraries/Lists/FlatList', () => ({
   __esModule: true,
@@ -36,21 +33,20 @@ jest.mock('@/services/upiService', () => ({
 
 jest.mock('@/services/driverService', () => ({
   fetchDriverById: jest.fn().mockResolvedValue(null),
+  fetchDrivers: jest.fn().mockResolvedValue([]),
 }));
 
 describe('DailyEntryListScreen', () => {
   it('renders without throwing and shows the fuel price warning', async () => {
     const renderer = await renderScreen(
       <DailyEntryListScreen
-        navigation={
-          createNavigationMock() as unknown as Props['navigation']
-        }
+        navigation={createNavigationMock() as unknown as Props['navigation']}
         route={createRouteMock() as unknown as Props['route']}
       />,
     );
 
-    expect(
-      treeContainsText(renderer, 'No fuel price set for this date'),
-    ).toBe(true);
+    expect(treeContainsText(renderer, 'No fuel price set for this date')).toBe(
+      true,
+    );
   });
 });
