@@ -22,5 +22,7 @@ describe('SummaryScreen', () => {
     const renderer = await renderScreen(<SummaryScreen />);
 
     expect(treeContainsText(renderer, 'No entries this month')).toBe(true);
+    expect(treeContainsText(renderer, 'Supplier')).toBe(true);
+    expect(treeContainsText(renderer, 'Ravindra Kumar Singh')).toBe(true);
   });
 });

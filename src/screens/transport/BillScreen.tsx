@@ -7,7 +7,10 @@ import { FormTextInput } from '@/components/FormTextInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
+import { SupplierSelector } from '@/components/SupplierSelector';
 import { Shimmer } from '@/components/Shimmer';
+import { useSupplierStore } from '@/stores/useSupplierStore';
+import { SUPPLIER_PROFILES } from '@/types/supplier';
 import { fetchDailyEntriesForMonth } from '@/services/dailyEntryService';
 import { fetchDrivers } from '@/services/driverService';
 import { computeVehicleTypeTotalsForMonth } from '@/services/vehicleSummaryService';
@@ -28,6 +31,9 @@ import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 
 export function BillScreen() {
+  const selectedSupplierId = useSupplierStore(
+    state => state.selectedSupplierIds.hilalpur,
+  );
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey());
   const [rateInputs, setRateInputs] = useState<Record<VehicleType, string>>(
     () =>
@@ -128,7 +134,11 @@ export function BillScreen() {
         nos: vehicleTotals[type],
         ratePerTrip: Number(rateInputs[type]) || 0,
       }));
-      await shareBillReport(monthLabel, lineItems);
+      await shareBillReport(
+        monthLabel,
+        lineItems,
+        SUPPLIER_PROFILES[selectedSupplierId],
+      );
     } catch (error) {
       setExportErrorMessage(
         error instanceof Error ? error.message : 'Failed to export bill.',
@@ -142,6 +152,7 @@ export function BillScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <ScrollView contentContainerStyle={styles.content}>
+          <SupplierSelector group="hilalpur" />
           <View style={styles.monthNavigator}>
             <MonthNavigator
               selectedMonth={selectedMonth}
@@ -213,6 +224,7 @@ export function BillScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
+        <SupplierSelector group="hilalpur" />
         <View style={styles.monthNavigator}>
           <MonthNavigator
             selectedMonth={selectedMonth}

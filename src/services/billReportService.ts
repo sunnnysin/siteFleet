@@ -1,6 +1,7 @@
 import { generatePDF } from 'react-native-html-to-pdf';
 import Share from 'react-native-share';
 import type { VehicleType } from '@/types/driver';
+import type { SupplierProfile } from '@/types/supplier';
 
 const VEHICLE_TYPE_BILL_LABELS: Record<VehicleType, string> = {
   ACE: 'ACE',
@@ -20,6 +21,7 @@ export interface BillLineItem {
 function buildReportHtml(
   monthLabel: string,
   lineItems: BillLineItem[],
+  supplier: SupplierProfile,
 ): string {
   const rows = lineItems
     .map(item => {
@@ -64,7 +66,7 @@ function buildReportHtml(
       <body>
         <div class="mobile">Mob:- 9430483150</div>
         <div class="title">BILL</div>
-        <div class="name">MR. INDUSTRIES</div>
+        <div class="name">${supplier.name}</div>
         <div class="address">At:- Pakauli, PO:- Rajason, Vaishali pin-844102</div>
         <div class="address">All Type of Vehicle Supplier.</div>
 
@@ -75,10 +77,18 @@ function buildReportHtml(
 
         <div class="meta">
           <div class="meta-row"><span class="meta-label">Account Details:-</span></div>
-          <div class="meta-row"><span class="meta-label">Account Number:-</span><span>6016002100004334</span></div>
-          <div class="meta-row"><span class="meta-label">IFSC Code:-</span><span>PUNB0601600</span></div>
-          <div class="meta-row"><span class="meta-label">PAN NO.:-</span><span>NOMPS3118J</span></div>
-          <div class="meta-row"><span class="meta-label">Aadhar No.:-</span><span>9246 1996 0950</span></div>
+          <div class="meta-row"><span class="meta-label">Account Number:-</span><span>${
+            supplier.accountNumber
+          }</span></div>
+          <div class="meta-row"><span class="meta-label">IFSC Code:-</span><span>${
+            supplier.ifscCode
+          }</span></div>
+          <div class="meta-row"><span class="meta-label">PAN NO.:-</span><span>${
+            supplier.panNumber
+          }</span></div>
+          <div class="meta-row"><span class="meta-label">Aadhar No.:-</span><span>${
+            supplier.aadharNumber
+          }</span></div>
         </div>
 
         <div class="month">Month:-<strong>${monthLabel}</strong></div>
@@ -115,8 +125,9 @@ function buildReportHtml(
 export async function shareBillReport(
   monthLabel: string,
   lineItems: BillLineItem[],
+  supplier: SupplierProfile,
 ): Promise<void> {
-  const html = buildReportHtml(monthLabel, lineItems);
+  const html = buildReportHtml(monthLabel, lineItems, supplier);
   const fileName = `Bill_${monthLabel.replace(/[\s-]+/g, '_')}`;
   const { filePath } = await generatePDF({
     html,

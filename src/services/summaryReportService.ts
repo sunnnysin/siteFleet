@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { VEHICLE_TYPES, type VehicleType } from '@/types/driver';
 import { parseDateKey, parseMonthKey } from '@/utils/dateUtils';
 import type { DailyVehicleTypeCounts } from '@/services/vehicleSummaryService';
+import type { SupplierProfile } from '@/types/supplier';
 
 const VEHICLE_TYPE_SUMMARY_LABELS: Record<VehicleType, string> = {
   ACE: 'ACE',
@@ -21,6 +22,7 @@ function formatCount(count: number): string {
 function buildReportHtml(
   monthKey: string,
   dailyCounts: DailyVehicleTypeCounts[],
+  supplier: SupplierProfile,
 ): string {
   const monthLabel = format(parseMonthKey(monthKey), 'MMMM-yyyy');
 
@@ -65,7 +67,7 @@ function buildReportHtml(
         </style>
       </head>
       <body>
-        <h1>MR. INDUSTRIES</h1>
+        <h1>${supplier.name}</h1>
         <div class="address">At. :- Pakauli, PO :- Rajason, Dist. :- Vaishali 844102</div>
         <div class="address">To :- EKTA SHAKTI FOUNDATION (Regd.)</div>
         <div class="address">Hilalpur Hajipur Vaishali, pin-844102</div>
@@ -120,8 +122,9 @@ function buildReportHtml(
 export async function shareSummaryReport(
   monthKey: string,
   dailyCounts: DailyVehicleTypeCounts[],
+  supplier: SupplierProfile,
 ): Promise<void> {
-  const html = buildReportHtml(monthKey, dailyCounts);
+  const html = buildReportHtml(monthKey, dailyCounts, supplier);
   const monthLabel = format(parseMonthKey(monthKey), 'MMMM_yyyy');
   const fileName = `Summary_${monthLabel}`;
   const { filePath } = await generatePDF({

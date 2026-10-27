@@ -33,5 +33,7 @@ describe('BillScreen', () => {
     const renderer = await renderScreen(<BillScreen />);
 
     expect(treeContainsText(renderer, 'Rate per trip')).toBe(true);
+    expect(treeContainsText(renderer, 'Supplier')).toBe(true);
+    expect(treeContainsText(renderer, 'Ravindra Kumar Singh')).toBe(true);
   });
 });
