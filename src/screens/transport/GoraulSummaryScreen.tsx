@@ -13,12 +13,15 @@ import { format, getDaysInMonth } from 'date-fns';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
+import { SupplierSelector } from '@/components/SupplierSelector';
 import { Shimmer } from '@/components/Shimmer';
 import {
   computeGoraulSummaryTotals,
   fetchGoraulSummary,
   saveGoraulSummary,
 } from '@/services/goraulSummaryService';
+import { useSupplierStore } from '@/stores/useSupplierStore';
+import { SUPPLIER_PROFILES } from '@/types/supplier';
 import { shareGoraulSummaryReport } from '@/services/goraulSummaryReportService';
 import {
   currentMonthKey,
@@ -74,6 +77,9 @@ function buildRowInputs(
 type ViewMode = 'prompt' | 'form' | 'saved';
 
 export function GoraulSummaryScreen() {
+  const selectedSupplierId = useSupplierStore(
+    state => state.selectedSupplierIds.goraul,
+  );
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey());
   const [savedSummary, setSavedSummary] = useState<GoraulSummary | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('prompt');
@@ -219,6 +225,7 @@ export function GoraulSummaryScreen() {
       await shareGoraulSummaryReport(
         selectedMonth,
         filterNonZeroEntries(entries),
+        SUPPLIER_PROFILES[selectedSupplierId],
       );
     } catch (error) {
       setExportErrorMessage(
@@ -233,6 +240,7 @@ export function GoraulSummaryScreen() {
     return (
       <SafeAreaView style={styles.container} edges={[]}>
         <ScrollView contentContainerStyle={styles.content}>
+          <SupplierSelector group="goraul" />
           <View style={styles.monthNavigator}>
             <MonthNavigator
               selectedMonth={selectedMonth}
@@ -305,6 +313,7 @@ export function GoraulSummaryScreen() {
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
       >
+        <SupplierSelector group="goraul" />
         <View style={styles.monthNavigator}>
           <MonthNavigator
             selectedMonth={selectedMonth}

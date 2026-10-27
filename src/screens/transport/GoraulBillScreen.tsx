@@ -8,6 +8,7 @@ import { FormTextInput } from '@/components/FormTextInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
+import { SupplierSelector } from '@/components/SupplierSelector';
 import { Shimmer } from '@/components/Shimmer';
 import {
   computeGoraulSummaryTotals,
@@ -22,6 +23,8 @@ import {
   shareGoraulBillReport,
   GORAUL_VEHICLE_TYPE_BILL_LABELS,
 } from '@/services/goraulBillReportService';
+import { useSupplierStore } from '@/stores/useSupplierStore';
+import { SUPPLIER_PROFILES } from '@/types/supplier';
 import { formatCurrency } from '@/utils/currencyUtils';
 import { currentMonthKey, MONTH_FORMAT } from '@/utils/dateUtils';
 import { VEHICLE_TYPES, type VehicleType } from '@/types/driver';
@@ -36,6 +39,9 @@ type GoraulBillScreenProps = NativeStackScreenProps<
 >;
 
 export function GoraulBillScreen({ navigation }: GoraulBillScreenProps) {
+  const selectedSupplierId = useSupplierStore(
+    state => state.selectedSupplierIds.goraul,
+  );
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey());
   const [hasSummaryForMonth, setHasSummaryForMonth] = useState(false);
   const [rateInputs, setRateInputs] = useState<Record<VehicleType, string>>(
@@ -136,7 +142,11 @@ export function GoraulBillScreen({ navigation }: GoraulBillScreenProps) {
         nos: vehicleTotals[type],
         ratePerTrip: Number(rateInputs[type]) || 0,
       }));
-      await shareGoraulBillReport(monthLabel, lineItems);
+      await shareGoraulBillReport(
+        monthLabel,
+        lineItems,
+        SUPPLIER_PROFILES[selectedSupplierId],
+      );
     } catch (error) {
       setExportErrorMessage(
         error instanceof Error ? error.message : 'Failed to export bill.',
@@ -150,6 +160,7 @@ export function GoraulBillScreen({ navigation }: GoraulBillScreenProps) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <ScrollView contentContainerStyle={styles.content}>
+          <SupplierSelector group="goraul" />
           <View style={styles.monthNavigator}>
             <MonthNavigator
               selectedMonth={selectedMonth}
@@ -243,6 +254,7 @@ export function GoraulBillScreen({ navigation }: GoraulBillScreenProps) {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
+        <SupplierSelector group="goraul" />
         <View style={styles.monthNavigator}>
           <MonthNavigator
             selectedMonth={selectedMonth}

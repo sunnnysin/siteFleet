@@ -3,6 +3,7 @@ import Share from 'react-native-share';
 import { format } from 'date-fns';
 import { parseDateKey, parseMonthKey } from '@/utils/dateUtils';
 import type { GoraulSummaryEntry } from '@/types/goraulSummary';
+import type { SupplierProfile } from '@/types/supplier';
 
 function formatSummaryDate(dateKey: string): string {
   return format(parseDateKey(dateKey), 'dd/MM/yyyy');
@@ -15,6 +16,7 @@ function formatCount(count: number): string {
 function buildReportHtml(
   monthKey: string,
   entries: GoraulSummaryEntry[],
+  supplier: SupplierProfile,
 ): string {
   const monthLabel = format(parseMonthKey(monthKey), 'MMMM-yyyy');
 
@@ -57,7 +59,7 @@ function buildReportHtml(
         </style>
       </head>
       <body>
-        <h1>Mini TRANSPORT</h1>
+        <h1>${supplier.summaryTitle}</h1>
         <div class="address">At. :- Pakauli, PO :- Rajason, Dist. :- Vaishali 844102</div>
         <div class="address">To :- EKTA SHAKTI FOUNDATION (Regd.)</div>
         <div class="address">Mona Bisanpur Patedi Belsar, Belsar Vaishali, pin-844118</div>
@@ -109,8 +111,9 @@ function buildReportHtml(
 export async function shareGoraulSummaryReport(
   monthKey: string,
   entries: GoraulSummaryEntry[],
+  supplier: SupplierProfile,
 ): Promise<void> {
-  const html = buildReportHtml(monthKey, entries);
+  const html = buildReportHtml(monthKey, entries, supplier);
   const monthLabel = format(parseMonthKey(monthKey), 'MMMM_yyyy');
   const fileName = `GoraulSummary_${monthLabel}`;
   const { filePath } = await generatePDF({

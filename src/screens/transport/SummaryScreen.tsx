@@ -4,7 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { EmptyState } from '@/components/EmptyState';
 import { MonthNavigator } from '@/components/MonthNavigator';
+import { SupplierSelector } from '@/components/SupplierSelector';
 import { Shimmer } from '@/components/Shimmer';
+import { useSupplierStore } from '@/stores/useSupplierStore';
+import { SUPPLIER_PROFILES } from '@/types/supplier';
 import { fetchDailyEntriesForMonth } from '@/services/dailyEntryService';
 import { fetchDrivers } from '@/services/driverService';
 import {
@@ -22,6 +25,9 @@ import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 
 export function SummaryScreen() {
+  const selectedSupplierId = useSupplierStore(
+    state => state.selectedSupplierIds.hilalpur,
+  );
   const [selectedMonth, setSelectedMonth] = useState(currentMonthKey());
   const [dailyCounts, setDailyCounts] = useState<DailyVehicleTypeCounts[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,7 +68,11 @@ export function SummaryScreen() {
     setIsExporting(true);
     setExportErrorMessage(null);
     try {
-      await shareSummaryReport(selectedMonth, dailyCounts);
+      await shareSummaryReport(
+        selectedMonth,
+        dailyCounts,
+        SUPPLIER_PROFILES[selectedSupplierId],
+      );
     } catch (error) {
       setExportErrorMessage(
         error instanceof Error ? error.message : 'Failed to export summary.',
@@ -76,6 +86,7 @@ export function SummaryScreen() {
     return (
       <SafeAreaView style={styles.container} edges={[]}>
         <ScrollView contentContainerStyle={styles.list}>
+          <SupplierSelector group="hilalpur" />
           <View style={styles.monthNavigator}>
             <MonthNavigator
               selectedMonth={selectedMonth}
@@ -140,6 +151,7 @@ export function SummaryScreen() {
   return (
     <SafeAreaView style={styles.container} edges={[]}>
       <ScrollView contentContainerStyle={styles.list}>
+        <SupplierSelector group="hilalpur" />
         <View style={styles.monthNavigator}>
           <MonthNavigator
             selectedMonth={selectedMonth}
