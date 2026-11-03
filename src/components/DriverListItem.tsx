@@ -10,7 +10,7 @@ import { colors } from '@/theme/colors';
 import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import phoneIcon from '@/assets/phone.png';
-import type { Driver } from '@/types/driver';
+import { hasDriverPhone, type Driver } from '@/types/driver';
 
 interface DriverListItemProps {
   driver: Driver;
@@ -54,13 +54,15 @@ export function DriverListItem({
           ) : null}
         </View>
       </View>
-      <TouchableOpacity onPress={handleCall} hitSlop={8} activeOpacity={0.7}>
-        <Image
-          source={phoneIcon}
-          style={styles.callIcon}
-          resizeMode="contain"
-        />
-      </TouchableOpacity>
+      {hasDriverPhone(driver) ? (
+        <TouchableOpacity onPress={handleCall} hitSlop={8} activeOpacity={0.7}>
+          <Image
+            source={phoneIcon}
+            style={styles.callIcon}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      ) : null}
     </TouchableOpacity>
   );
 }

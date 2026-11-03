@@ -4,7 +4,7 @@ import { formatCurrency } from '@/utils/currencyUtils';
 import { formatDisplayDate } from '@/utils/dateUtils';
 import type { DriverBalanceSummary } from '@/services/driverBalanceService';
 import type { DriverPayment } from '@/types/driverPayment';
-import type { Driver } from '@/types/driver';
+import { hasDriverPhone, type Driver } from '@/types/driver';
 import type { DailyEntry, PaymentStatus } from '@/types/dailyEntry';
 
 function computeDriverPayForReport(entry: DailyEntry, driver: Driver): number {
@@ -128,7 +128,11 @@ function buildReportHtml(
         <h1>${driver.name}</h1>
         <h2>${monthLabel} · Driver Report</h2>
         <div class="meta">
-          <span><strong>Phone:</strong> ${driver.phone}</span>
+          ${
+            hasDriverPhone(driver)
+              ? `<span><strong>Phone:</strong> ${driver.phone}</span>`
+              : ''
+          }
           <span><strong>Vehicle:</strong> ${driver.vehicleType} · ${
     driver.vehicleNumber
   }</span>
