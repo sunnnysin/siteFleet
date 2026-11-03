@@ -54,7 +54,7 @@ const DRIVER_TYPE_OPTIONS = [
 function toDriverDraft(values: DriverFormValues): DriverDraft {
   return {
     name: values.name,
-    phone: values.phone,
+    phone: values.phone.trim(),
     upiId: values.upiId,
     vehicleNumber: values.vehicleNumber,
     vehicleType: values.vehicleType,
@@ -224,7 +224,7 @@ export function AddEditDriverScreen({
             name="phone"
             render={({ field }) => (
               <FormTextInput
-                label="Phone"
+                label="Phone (optional)"
                 value={field.value}
                 onChangeText={value =>
                   field.onChange(value.replace(/[^0-9]/g, ''))

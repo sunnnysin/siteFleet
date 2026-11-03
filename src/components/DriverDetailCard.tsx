@@ -5,7 +5,7 @@ import { radii, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 import { formatCurrency } from '@/utils/currencyUtils';
 import type { DriverBalanceSummary } from '@/services/driverBalanceService';
-import type { Driver } from '@/types/driver';
+import { hasDriverPhone, type Driver } from '@/types/driver';
 
 interface DriverDetailCardProps {
   driver: Driver;
@@ -72,7 +72,9 @@ export function DriverDetailCard({
 
       <View style={styles.divider} />
 
-      <DetailRow label="Phone" value={driver.phone} />
+      {hasDriverPhone(driver) ? (
+        <DetailRow label="Phone" value={driver.phone} />
+      ) : null}
       <DetailRow
         label="UPI ID"
         value={driver.upiId.length > 0 ? driver.upiId : 'Not set'}

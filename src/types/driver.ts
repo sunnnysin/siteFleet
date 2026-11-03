@@ -21,6 +21,10 @@ export interface Driver {
   isActive: boolean;
 }
 
+export function hasDriverPhone(driver: Pick<Driver, 'phone'>): boolean {
+  return typeof driver.phone === 'string' && driver.phone.trim().length > 0;
+}
+
 export type DriverDraft = Omit<Driver, 'id' | 'ownerId' | 'createdAt'>;
 
 export const driverFormSchema = z
@@ -29,7 +33,10 @@ export const driverFormSchema = z
     phone: z
       .string()
       .trim()
-      .regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number'),
+      .refine(
+        value => value.length === 0 || /^[6-9]\d{9}$/.test(value),
+        'Enter a valid 10-digit Indian mobile number',
+      ),
     upiId: z
       .string()
       .trim()
